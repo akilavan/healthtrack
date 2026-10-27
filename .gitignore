@@ -1,0 +1,28 @@
+# Visual Studio
+.vs/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# Build results
+bin/
+obj/
+out/
+publish/
+
+# NuGet
+packages/
+*.nupkg
+*.snupkg
+
+# ASP.NET
+App_Data/*.mdf
+App_Data/*.ldf
+
+# Logs
+*.log
+
+# OS
+.DS_Store
+Thumbs.db

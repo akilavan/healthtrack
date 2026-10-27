@@ -1,0 +1,18 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    @Html.Partial("_TitleMeta")
+    @Html.Partial("_HeadCss")
+    @RenderSection("styles", required: false)
+</head>
+<body class="bg-gray-50">
+
+    <div style="min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;">
+        @RenderBody()
+    </div>
+
+    @Html.Partial("_FooterScripts")
+    @RenderSection("scripts", required: false)
+
+</body>
+</html>

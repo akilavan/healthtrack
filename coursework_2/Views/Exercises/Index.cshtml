@@ -1,0 +1,71 @@
+@using coursework_2.Models
+@model List<Exercise>
+
+@if (TempData["Success"] != null)
+{
+    <div class="mb-4 rounded-md bg-success px-4 py-3 text-sm text-white">@TempData["Success"]</div>
+}
+@if (TempData["Error"] != null)
+{
+    <div class="mb-4 rounded-md bg-danger px-4 py-3 text-sm text-white">@TempData["Error"]</div>
+}
+
+<div class="card">
+    <div class="card-header flex flex-wrap gap-3 justify-between items-center">
+        <h4 class="card-title">Exercise Library</h4>
+        @if (User.IsInRole("Trainer") || User.IsInRole("Admin"))
+        {
+            <a href="@Url.Action("Form", "Exercises")" class="btn btn-sm bg-primary text-white">New Exercise</a>
+        }
+    </div>
+
+    <div class="card-body">
+        <form method="get" action="@Url.Action("Index", "Exercises")" class="flex gap-2">
+            <input type="text" name="q" value="@ViewBag.Query" class="form-input w-full md:w-80" placeholder="Search by name or category" />
+            <button type="submit" class="btn bg-primary text-white">Search</button>
+        </form>
+    </div>
+
+    <div class="overflow-x-auto">
+        <table class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-gray-50">
+                <tr>
+                    <th class="px-6 py-3 text-start text-sm text-default-500">Name</th>
+                    <th class="px-6 py-3 text-start text-sm text-default-500">Category</th>
+                    <th class="px-6 py-3 text-start text-sm text-default-500">Muscle Group</th>
+                    <th class="px-6 py-3 text-start text-sm text-default-500">MET</th>
+                    <th class="px-6 py-3 text-end text-sm text-default-500">Actions</th>
+                </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-200">
+                @if (Model == null || Model.Count == 0)
+                {
+                    <tr><td colspan="5" class="px-6 py-4 text-sm text-default-500">No exercises yet.</td></tr>
+                }
+                else
+                {
+                    foreach (var e in Model)
+                    {
+                        <tr>
+                            <td class="px-6 py-3 text-sm text-default-800">@e.Name</td>
+                            <td class="px-6 py-3 text-sm">@e.Category</td>
+                            <td class="px-6 py-3 text-sm">@e.MuscleGroup</td>
+                            <td class="px-6 py-3 text-sm">@e.MetValue.ToString("0.0")</td>
+                            <td class="px-6 py-3 text-sm text-end">
+                                @if (User.IsInRole("Trainer") || User.IsInRole("Admin"))
+                                {
+                                    <a class="btn btn-sm bg-light text-gray-800" href="@Url.Action("Form", "Exercises", new { id = e.ExerciseId })">Edit</a>
+                                    using (Html.BeginForm("Delete", "Exercises", new { id = e.ExerciseId }, FormMethod.Post, new { @class = "inline", onsubmit = "return confirm('Delete this exercise?');" }))
+                                    {
+                                        @Html.AntiForgeryToken()
+                                        <button type="submit" class="btn btn-sm bg-danger text-white">Delete</button>
+                                    }
+                                }
+                            </td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

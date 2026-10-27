@@ -1,0 +1,73 @@
+@using System.Collections.Generic
+@using coursework_2.Models
+@model List<AuditLog>
+@{
+    var actions = ViewBag.Actions as List<string>;
+}
+
+@if (TempData["Success"] != null)
+{
+    <div class="mb-4 rounded-md bg-success px-4 py-3 text-sm text-white">@TempData["Success"]</div>
+}
+
+<div class="card">
+    <div class="card-header flex flex-wrap gap-3 justify-between items-center">
+        <h4 class="card-title">Audit Logs</h4>
+        @using (Html.BeginForm("ClearOld", "AuditLogs", FormMethod.Post, new { onsubmit = "return confirm('Delete audit entries older than 30 days?');" }))
+        {
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="days" value="30" />
+            <button type="submit" class="btn btn-sm bg-danger text-white">Clear older than 30 days</button>
+        }
+    </div>
+
+    <div class="card-body">
+        <form method="get" action="@Url.Action("Index", "AuditLogs")" class="flex flex-wrap gap-2">
+            <input type="text" name="search" value="@ViewBag.Search" class="form-input w-full md:w-64" placeholder="Search entity or IP" />
+            <select name="actionName" class="form-input w-full md:w-56">
+                <option value="">All actions</option>
+                @if (actions != null)
+                {
+                    foreach (var a in actions)
+                    {
+                        <option value="@a" selected="@(ViewBag.Action == a ? "selected" : null)">@a</option>
+                    }
+                }
+            </select>
+            <button type="submit" class="btn bg-primary text-white">Filter</button>
+        </form>
+    </div>
+
+    <div class="overflow-x-auto">
+        <table class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-gray-50">
+                <tr>
+                    <th class="px-6 py-3 text-start text-sm text-default-500">When</th>
+                    <th class="px-6 py-3 text-start text-sm text-default-500">User</th>
+                    <th class="px-6 py-3 text-start text-sm text-default-500">Action</th>
+                    <th class="px-6 py-3 text-start text-sm text-default-500">Entity</th>
+                    <th class="px-6 py-3 text-start text-sm text-default-500">IP</th>
+                </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-200">
+                @if (Model == null || Model.Count == 0)
+                {
+                    <tr><td colspan="5" class="px-6 py-4 text-sm text-default-500">No audit entries.</td></tr>
+                }
+                else
+                {
+                    foreach (var l in Model)
+                    {
+                        <tr>
+                            <td class="px-6 py-3 text-sm">@l.CreatedAt.ToLocalTime().ToString("dd MMM yyyy HH:mm:ss")</td>
+                            <td class="px-6 py-3 text-sm">@(l.User != null ? l.User.Email : "system")</td>
+                            <td class="px-6 py-3 text-sm text-default-800">@l.Action</td>
+                            <td class="px-6 py-3 text-sm">@l.EntityName</td>
+                            <td class="px-6 py-3 text-sm">@l.IpAddress</td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

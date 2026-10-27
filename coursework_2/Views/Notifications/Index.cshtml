@@ -1,0 +1,56 @@
+﻿@using coursework_2.Models
+@model List<Notification>
+
+<div class="card">
+    <div class="card-header flex justify-between items-center">
+        <h4 class="card-title">Notifications</h4>
+        @using (Html.BeginForm("MarkAllRead", "Notifications", FormMethod.Post))
+        {
+            @Html.AntiForgeryToken()
+            <button type="submit" class="btn btn-sm bg-light text-gray-800">Mark all read</button>
+        }
+    </div>
+
+    <div class="card-body">
+        @if (Model == null || Model.Count == 0)
+        {
+            <p class="text-default-500 text-sm">No notifications.</p>
+        }
+        else
+        {
+            <ul class="divide-y divide-gray-200">
+                @foreach (var n in Model)
+                {
+                    <li class="py-4 flex justify-between items-start gap-4">
+                        <div>
+                            <p class="text-sm font-medium @(n.IsRead ? "text-default-500" : "text-default-900")">
+                                @if (!n.IsRead)
+                                {
+                                    <span class="inline-block size-2 rounded-full bg-primary me-2"></span>
+                                }
+                                @n.Title
+                            </p>
+                            <p class="text-sm text-default-500 mt-1">@n.Message</p>
+                            <p class="text-xs text-default-400 mt-1">@n.ScheduledFor.ToLocalTime().ToString("dd MMM yyyy HH:mm") - @n.Type</p>
+                        </div>
+                        <div class="flex gap-2">
+                            @if (!n.IsRead)
+                            {
+                                using (Html.BeginForm("MarkRead", "Notifications", new { id = n.NotificationId }, FormMethod.Post))
+                                {
+                                    @Html.AntiForgeryToken()
+                                    <button type="submit" class="btn btn-sm bg-primary text-white">Read</button>
+                                }
+                            }
+                            @using (Html.BeginForm("Delete", "Notifications", new { id = n.NotificationId }, FormMethod.Post))
+                            {
+                                @Html.AntiForgeryToken()
+                                <button type="submit" class="btn btn-sm bg-danger text-white">Delete</button>
+                            }
+                        </div>
+                    </li>
+                }
+            </ul>
+        }
+    </div>
+</div>

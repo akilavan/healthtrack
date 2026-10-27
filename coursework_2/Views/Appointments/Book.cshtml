@@ -1,0 +1,47 @@
+﻿<div class="card">
+    <div class="card-header"><h4 class="card-title">Book Appointment</h4></div>
+    <div class="card-body">
+        @if (ViewBag.Error != null)
+        {
+            <div class="mb-4 rounded-md bg-danger px-4 py-3 text-sm text-white">@ViewBag.Error</div>
+        }
+
+        @if (ViewBag.HasTrainer == false)
+        {
+            <p class="text-default-700">
+                You cannot request an appointment until an administrator assigns you to a trainer.
+            </p>
+            <a class="btn bg-light text-gray-800 mt-4" href="@Url.Action("Index", "Appointments")">Back to appointments</a>
+        }
+        else
+        {
+            <form action="@Url.Action("Book", "Appointments")" method="post">
+                .@Html.AntiForgeryToken()
+
+                <div class="grid md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm mb-1">Trainer</label>
+                        @Html.DropDownList("trainerId", (SelectList)ViewBag.Trainers, new { @class = "form-input", required = "required" })
+                    </div>
+                    <div>
+                        <label class="block text-sm mb-1">Date</label>
+                        <input type="date" name="date" class="form-input" min="@coursework_2.Models.SettingsService.Now.ToString("yyyy-MM-dd")" required />
+                    </div>
+                    <div>
+                        <label class="block text-sm mb-1">Time</label>
+                        <input type="time" name="time" class="form-input" value="09:00" required />
+                    </div>
+                    <div>
+                        <label class="block text-sm mb-1">Purpose</label>
+                        <input type="text" name="purpose" maxlength="200" class="form-input" placeholder="e.g. technique review" />
+                    </div>
+                </div>
+
+                <div class="mt-6 flex gap-2">
+                    <button type="submit" class="btn bg-primary text-white">Request appointment</button>
+                    <a class="btn bg-light text-gray-800" href="@Url.Action("Index", "Appointments")">Cancel</a>
+                </div>
+            </form>
+        }
+    </div>
+</div>

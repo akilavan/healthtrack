@@ -1,0 +1,74 @@
+﻿@using coursework_2.Models
+@model List<WorkoutPlan>
+
+@if (TempData["Success"] != null)
+{
+    <div class="mb-4 rounded-md bg-success px-4 py-3 text-sm text-white">@TempData["Success"]</div>
+}
+@if (TempData["Error"] != null)
+{
+    <div class="mb-4 rounded-md bg-danger px-4 py-3 text-sm text-white">@TempData["Error"]</div>
+}
+
+<div class="card">
+    <div class="card-header flex justify-between items-center">
+        <h4 class="card-title">Workout Plans</h4>
+        @if (User.IsInRole("Trainer"))
+        {
+            <a href="@Url.Action("Form", "Workouts")" class="btn btn-sm bg-primary text-white">New Plan</a>
+        }
+    </div>
+
+    <div class="overflow-x-auto">
+        <table class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-gray-50">
+                <tr>
+                    <th class="px-6 py-3 text-start text-sm text-default-500">Title</th>
+                    @if (!User.IsInRole("Client"))
+                    {
+                        <th class="px-6 py-3 text-start text-sm text-default-500">Client</th>
+                    }
+                    @if (!User.IsInRole("Trainer"))
+                    {
+                        <th class="px-6 py-3 text-start text-sm text-default-500">Trainer</th>
+                    }
+                    <th class="px-6 py-3 text-start text-sm text-default-500">Start</th>
+                    <th class="px-6 py-3 text-start text-sm text-default-500">Exercises</th>
+                    <th class="px-6 py-3 text-start text-sm text-default-500">Status</th>
+                    <th class="px-6 py-3 text-end text-sm text-default-500">Action</th>
+                </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-200">
+                @if (Model == null || Model.Count == 0)
+                {
+                    <tr><td colspan="7" class="px-6 py-4 text-sm text-default-500">No workout plans yet.</td></tr>
+                }
+                else
+                {
+                    foreach (var p in Model)
+                    {
+                        <tr>
+                            <td class="px-6 py-3 text-sm text-default-800">@p.Title</td>
+                            @if (!User.IsInRole("Client"))
+                            {
+                                <td class="px-6 py-3 text-sm">@(p.Client != null ? p.Client.FullName : "-")</td>
+                            }
+                            @if (!User.IsInRole("Trainer"))
+                            {
+                                <td class="px-6 py-3 text-sm">@(p.Trainer != null ? p.Trainer.FullName : "-")</td>
+                            }
+                            <td class="px-6 py-3 text-sm">@p.StartDate.ToString("dd MMM yyyy")</td>
+                            <td class="px-6 py-3 text-sm">@p.Items.Count</td>
+                            <td class="px-6 py-3 text-sm">
+                                <span class="inline-block px-2 py-1 rounded-md text-xs @(p.Status == "Active" ? "bg-success" : "bg-gray-500") text-white">@p.Status</span>
+                            </td>
+                            <td class="px-6 py-3 text-sm text-end">
+                                <a class="btn btn-sm bg-light text-gray-800" href="@Url.Action("Details", "Workouts", new { id = p.PlanId })">View</a>
+                            </td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

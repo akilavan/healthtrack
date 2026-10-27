@@ -1,0 +1,275 @@
+﻿@using coursework_2.Models
+@model SystemSetting
+
+@if (TempData["Success"] != null)
+{
+    <div class="mb-4 rounded-md bg-success px-4 py-3 text-sm text-white">@TempData["Success"]</div>
+}
+@if (TempData["Error"] != null)
+{
+    <div class="mb-4 rounded-md bg-danger px-4 py-3 text-sm text-white">@TempData["Error"]</div>
+}
+@if (ViewBag.Error != null)
+{
+    <div class="mb-4 rounded-md bg-danger px-4 py-3 text-sm text-white">@ViewBag.Error</div>
+}
+
+<div class="card">
+    <div class="card-header">
+        <h4 class="card-title">Branding &amp; Preferences</h4>
+    </div>
+    <div class="card-body">
+        @using (Html.BeginForm("Index", "Settings", FormMethod.Post, new { enctype = "multipart/form-data" }))
+        {
+            @Html.AntiForgeryToken()
+
+        <div class="grid md:grid-cols-2 gap-5">
+            <div>
+                <label class="text-default-800 text-sm font-medium inline-block mb-2" for="companyName">Company name</label>
+                <input id="companyName" name="companyName" class="form-input" required maxlength="120"
+                       value="@Model.CompanyName" />
+            </div>
+            <div>
+                <label class="text-default-800 text-sm font-medium inline-block mb-2" for="tagline">Tagline</label>
+                <input id="tagline" name="tagline" class="form-input" maxlength="200" value="@Model.Tagline" />
+            </div>
+            <div>
+                <label class="text-default-800 text-sm font-medium inline-block mb-2" for="supportEmail">Support email</label>
+                <input id="supportEmail" name="supportEmail" type="email" class="form-input" maxlength="150"
+                       value="@Model.SupportEmail" />
+            </div>
+            <div>
+                <label class="text-default-800 text-sm font-medium inline-block mb-2" for="supportPhone">Support phone</label>
+                <input id="supportPhone" name="supportPhone" class="form-input" maxlength="12"
+                       pattern="(0[0-9]{9}|\+94[0-9]{9}|94[0-9]{9})"
+                       title="10 digits starting 0, or +94 followed by 9 digits, or 94 followed by 9 digits"
+                       value="@Model.SupportPhone" />
+            </div>
+            <div>
+                <label class="text-default-800 text-sm font-medium inline-block mb-2" for="cancellationWindowHours">Cancellation window (hours)</label>
+                <input id="cancellationWindowHours" name="cancellationWindowHours" type="number" min="0" max="720"
+                       class="form-input" value="@Model.CancellationWindowHours" required />
+                <p class="text-default-500 text-xs mt-1">Clients cannot cancel within this many hours of the start time. 0 = no restriction (24 = 1 day, 48 = 2 days).</p>
+            </div>
+            <div>
+                <label class="text-default-800 text-sm font-medium inline-block mb-2" for="timeZoneId">Time zone</label>
+                <select id="timeZoneId" name="timeZoneId" class="form-input" required>
+                    @foreach (var zone in System.TimeZoneInfo.GetSystemTimeZones())
+                    {
+                        <option value="@zone.Id" selected="@(Model.TimeZoneId == zone.Id ? "selected" : null)">@zone.DisplayName</option>
+                    }
+                </select>
+                <p class="text-default-500 text-xs mt-1">All dates and times are shown in this time zone.</p>
+            </div>
+            <div>
+                <label class="text-default-800 text-sm font-medium inline-block mb-2" for="logo">Logo</label>
+                <input id="logo" name="logo" type="file" class="form-input" accept=".png,.jpg,.jpeg,.gif,.webp,.svg" />
+                <p class="text-default-500 text-xs mt-1">PNG, JPG, GIF, WEBP or SVG, max 2 MB.</p>
+            </div>
+        </div>
+
+            if (!string.IsNullOrEmpty(Model.LogoPath))
+            {
+                <div class="mt-5">
+                    <p class="text-default-500 text-sm mb-2">Current logo</p>
+                    <img src="@Url.Content(Model.LogoPath)" alt="Logo" style="max-height:64px;" class="mb-2">
+                    <label class="flex items-center gap-2 text-sm text-default-700">
+                        <input type="checkbox" name="removeLogo" value="true" />
+                        Remove current logo (falls back to the default)
+                    </label>
+                </div>
+            }
+
+            <div class="mt-6">
+                <button type="submit" class="btn bg-primary text-white">Save settings</button>
+                <span class="text-default-500 text-sm ms-3">Last updated @coursework_2.Models.SettingsService.FromUtc(Model.UpdatedAt).ToString("dd MMM yyyy HH:mm")</span>
+            </div>
+        }
+    </div>
+</div>
+
+<div class="card mt-6">
+    <div class="card-header">
+        <h4 class="card-title">SMS Gateway (txtmsg.lk)</h4>
+    </div>
+    <div class="card-body">
+        <p class="text-default-500 text-sm mb-4">
+            When disabled, phone verification is skipped and no SMS notifications are sent — everything else works as usual.
+            When enabled, new registrations and phone changes require a 6-digit code, and appointment updates are sent by SMS.
+        </p>
+
+        @using (Html.BeginForm("Sms", "Settings", FormMethod.Post))
+        {
+            @Html.AntiForgeryToken()
+
+            <label class="flex items-center gap-2 text-sm text-default-800 mb-5">
+                <input type="checkbox" name="smsEnabled" value="true" checked="@(Model.SmsEnabled ? "checked" : null)" />
+                Enable SMS gateway (verification + appointment notifications)
+            </label>
+
+            <div class="grid md:grid-cols-2 gap-5">
+                <div>
+                    <label class="text-default-800 text-sm font-medium inline-block mb-2" for="smsApiKey">API key</label>
+                    <input id="smsApiKey" name="smsApiKey" class="form-input" maxlength="200"
+                           value="@Model.SmsApiKey" autocomplete="off" @(Model.SmsEnabled ? "required" : null) />
+                    <p class="text-default-500 text-xs mt-1">Bearer token from your txtmsg.lk dashboard.</p>
+                </div>
+                <div>
+                    <label class="text-default-800 text-sm font-medium inline-block mb-2" for="smsSenderId">Sender ID</label>
+                    <input id="smsSenderId" name="smsSenderId" class="form-input" maxlength="11"
+                           value="@Model.SmsSenderId" @(Model.SmsEnabled ? "required" : null) />
+                    <p class="text-default-500 text-xs mt-1">Approved sender name, maximum 11 characters.</p>
+                </div>
+                <div class="md:col-span-2">
+                    <label class="text-default-800 text-sm font-medium inline-block mb-2" for="smsApiUrl">API URL</label>
+                    <input id="smsApiUrl" name="smsApiUrl" class="form-input" maxlength="300"
+                           value="@(string.IsNullOrWhiteSpace(Model.SmsApiUrl) ? coursework_2.Models.SmsService.DefaultApiUrl : Model.SmsApiUrl)"
+                           @(Model.SmsEnabled ? "required" : null) />
+                </div>
+            </div>
+
+            <div class="mt-6">
+                <button type="submit" class="btn bg-primary text-white">Save SMS settings</button>
+            </div>
+        }
+
+        @using (Html.BeginForm("TestSms", "Settings", FormMethod.Post))
+        {
+            @Html.AntiForgeryToken()
+
+            <div class="mt-6 pt-5 border-t border-default-200">
+                <label class="text-default-800 text-sm font-medium inline-block mb-2" for="testPhone">Send a test SMS</label>
+                <div class="flex flex-wrap gap-2">
+                    <input id="testPhone" name="testPhone" class="form-input max-w-xs" maxlength="12"
+                           pattern="(0[0-9]{9}|\+94[0-9]{9}|94[0-9]{9})"
+                           placeholder="0712345678" required />
+                    <button type="submit" class="btn bg-light text-gray-800">Send test</button>
+                </div>
+                <p class="text-default-500 text-xs mt-1">Requires SMS to be enabled and saved first.</p>
+            </div>
+        }
+    </div>
+</div>
+
+<div class="card mt-6">
+    <div class="card-header">
+        <h4 class="card-title">Google reCAPTCHA</h4>
+    </div>
+    <div class="card-body">
+        <p class="text-default-500 text-sm mb-4">
+            Protects the login and registration pages from automated abuse. When disabled, no captcha is required.
+            Create a v2 "I'm not a robot" site in the Google reCAPTCHA admin console to get your keys.
+        </p>
+
+        @using (Html.BeginForm("Captcha", "Settings", FormMethod.Post))
+        {
+            @Html.AntiForgeryToken()
+
+            <label class="flex items-center gap-2 text-sm text-default-800 mb-5">
+                <input type="checkbox" name="recaptchaEnabled" value="true" checked="@(Model.RecaptchaEnabled ? "checked" : null)" />
+                Enable reCAPTCHA on login and registration
+            </label>
+
+            <div class="grid md:grid-cols-2 gap-5">
+                <div>
+                    <label class="text-default-800 text-sm font-medium inline-block mb-2" for="recaptchaSiteKey">Site key</label>
+                    <input id="recaptchaSiteKey" name="recaptchaSiteKey" class="form-input" maxlength="100"
+                           value="@Model.RecaptchaSiteKey" autocomplete="off" @(Model.RecaptchaEnabled ? "required" : null) />
+                </div>
+                <div>
+                    <label class="text-default-800 text-sm font-medium inline-block mb-2" for="recaptchaSecretKey">Secret key</label>
+                    <input id="recaptchaSecretKey" name="recaptchaSecretKey" class="form-input" maxlength="100"
+                           value="@Model.RecaptchaSecretKey" autocomplete="off" @(Model.RecaptchaEnabled ? "required" : null) />
+                </div>
+            </div>
+
+            <div class="mt-6">
+                <button type="submit" class="btn bg-primary text-white">Save reCAPTCHA settings</button>
+            </div>
+        }
+    </div>
+</div>
+
+<div class="card mt-6">
+    <div class="card-header">
+        <h4 class="card-title">Public Landing Page</h4>
+    </div>
+    <div class="card-body">
+        <p class="text-default-500 text-sm mb-4">
+            The landing page introduces HealthTrack to signed-out visitors at the site root. When disabled,
+            visitors are redirected to the login page. Signed-in users always go straight to their dashboard.
+        </p>
+
+        @using (Html.BeginForm("LandingPage", "Settings", FormMethod.Post))
+        {
+            @Html.AntiForgeryToken()
+
+            <label class="flex items-center gap-2 text-sm text-default-800 mb-5">
+                <input type="checkbox" name="landingPageEnabled" value="true" checked="@(Model.LandingPageEnabled ? "checked" : null)" />
+                Show the public landing page to signed-out visitors
+            </label>
+
+            <div class="flex flex-wrap items-center gap-2">
+                <button type="submit" class="btn bg-primary text-white">Save landing page setting</button>
+                <a href="@Url.Action("Index", "LandingAdmin")" class="btn bg-light text-gray-800">Manage landing content</a>
+                <a href="@Url.Action("Preview", "Home")" target="_blank" class="btn bg-light text-gray-800">Preview page</a>
+            </div>
+        }
+    </div>
+</div>
+
+<div class="card mt-6">
+    <div class="card-header">
+        <h4 class="card-title">Recent SMS Activity</h4>
+    </div>
+    <div class="card-body overflow-x-auto">
+        @{
+            var recentSms = ViewBag.RecentSms as System.Collections.Generic.List<coursework_2.Models.SmsMessage>;
+        }
+        <table class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-gray-50">
+                <tr>
+                    <th class="px-4 py-3 text-start text-sm text-default-500">Sent</th>
+                    <th class="px-4 py-3 text-start text-sm text-default-500">Purpose</th>
+                    <th class="px-4 py-3 text-start text-sm text-default-500">Phone</th>
+                    <th class="px-4 py-3 text-start text-sm text-default-500">Status</th>
+                    <th class="px-4 py-3 text-start text-sm text-default-500">Details</th>
+                </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-200">
+                @if (recentSms == null || recentSms.Count == 0)
+                {
+                    <tr><td colspan="5" class="px-4 py-4 text-sm text-default-500">No SMS messages yet.</td></tr>
+                }
+                else
+                {
+                    foreach (var sms in recentSms)
+                    {
+                        <tr>
+                            <td class="px-4 py-3 text-sm whitespace-nowrap">@coursework_2.Models.SettingsService.FromUtc(sms.CreatedAt).ToString("dd MMM HH:mm")</td>
+                            <td class="px-4 py-3 text-sm">@sms.Purpose</td>
+                            <td class="px-4 py-3 text-sm whitespace-nowrap">@sms.Phone</td>
+                            <td class="px-4 py-3 text-sm">
+                                @if (sms.Status == "Sent")
+                                {
+                                    <span class="text-success">Sent</span>
+                                }
+                                else
+                                {
+                                    <span class="text-danger">@sms.Status</span>
+                                }
+                            </td>
+                            <td class="px-4 py-3 text-xs text-default-500" style="max-width:360px;">
+                                <div>@(sms.Purpose == "Verification" ? "Verification code sent (hidden)" : sms.Message)</div>
+                                @if (!string.IsNullOrWhiteSpace(sms.ProviderResponse))
+                                {
+                                    <div class="mt-1 text-default-400">@sms.ProviderResponse</div>
+                                }
+                            </td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

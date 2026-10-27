@@ -1,0 +1,126 @@
+@using System.Collections.Generic
+@using coursework_2.Models
+@{
+    var rows = ViewBag.Rows as List<TrainerClientRow> ?? new List<TrainerClientRow>();
+}
+@Html.Partial("_ReportNav")
+
+<div class="grid lg:grid-cols-4 md:grid-cols-2 gap-6 mb-6">
+    <div class="card">
+        <div class="card-body">
+            <p class="text-default-500 text-sm mb-1">Active Clients</p>
+            <h4 class="text-xl font-semibold text-default-900">@ViewBag.ActiveClients</h4>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+            <p class="text-default-500 text-sm mb-1">Workouts Logged (30 days)</p>
+            <h4 class="text-xl font-semibold text-default-900">@ViewBag.WorkoutLogs30</h4>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+            <p class="text-default-500 text-sm mb-1">Calories Burned (30 days)</p>
+            <h4 class="text-xl font-semibold text-default-900">@(((decimal)ViewBag.CaloriesOut30).ToString("0"))</h4>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+            <p class="text-default-500 text-sm mb-1">Pending Appointments</p>
+            <h4 class="text-xl font-semibold text-default-900">@ViewBag.PendingAppointments</h4>
+        </div>
+    </div>
+</div>
+
+<div class="grid lg:grid-cols-4 md:grid-cols-2 gap-6 mb-6">
+    <div class="card">
+        <div class="card-body">
+            <p class="text-default-500 text-sm mb-1">Workout Plans Created</p>
+            <h4 class="text-xl font-semibold text-default-900">@ViewBag.TotalWorkoutPlans</h4>
+        </div>
+    </div>
+    <div class="card">
+        <div class="card-body">
+            <p class="text-default-500 text-sm mb-1">Diet Plans Created</p>
+            <h4 class="text-xl font-semibold text-default-900">@ViewBag.TotalDietPlans</h4>
+        </div>
+    </div>
+    <div class="card">
+        <div class="card-body">
+            <p class="text-default-500 text-sm mb-1">Feedback Given</p>
+            <h4 class="text-xl font-semibold text-default-900">@ViewBag.FeedbackGiven</h4>
+        </div>
+    </div>
+    <div class="card">
+        <div class="card-body">
+            <p class="text-default-500 text-sm mb-1">Meals Logged (30 days)</p>
+            <h4 class="text-xl font-semibold text-default-900">@ViewBag.MealLogs30</h4>
+        </div>
+    </div>
+</div>
+
+<div class="card mb-6">
+    <div class="card-header"><h4 class="card-title">Workout Logs by Client (30 days)</h4></div>
+    <div class="card-body"><div id="client-chart"></div></div>
+</div>
+
+<div class="card">
+    <div class="card-header"><h4 class="card-title">My Clients</h4></div>
+    <div class="overflow-x-auto">
+        <table class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-gray-50">
+                <tr>
+                    <th class="px-6 py-3 text-start text-sm text-default-500">Client</th>
+                    <th class="px-6 py-3 text-start text-sm text-default-500">Plans</th>
+                    <th class="px-6 py-3 text-start text-sm text-default-500">Logs (30d)</th>
+                    <th class="px-6 py-3 text-start text-sm text-default-500">Calories (30d)</th>
+                    <th class="px-6 py-3 text-start text-sm text-default-500">Last workout</th>
+                    <th class="px-6 py-3 text-start text-sm text-default-500">Latest weight</th>
+                    <th class="px-6 py-3 text-start text-sm text-default-500">BMI</th>
+                </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-200">
+                @if (rows.Count == 0)
+                {
+                    <tr><td colspan="7" class="px-6 py-4 text-sm text-default-500">No active clients assigned to you yet.</td></tr>
+                }
+                else
+                {
+                    foreach (var r in rows)
+                    {
+                        <tr>
+                            <td class="px-6 py-3 text-sm text-default-800">
+                                <a class="text-primary" href="@Url.Action("Details", "Clients", new { id = r.ClientId })">@r.FullName</a>
+                            </td>
+                            <td class="px-6 py-3 text-sm">@r.Plans</td>
+                            <td class="px-6 py-3 text-sm">@r.WorkoutLogs30</td>
+                            <td class="px-6 py-3 text-sm">@r.CaloriesBurned30.ToString("0.0")</td>
+                            <td class="px-6 py-3 text-sm">@(r.LastWorkout.HasValue ? r.LastWorkout.Value.ToLocalTime().ToString("dd MMM yyyy") : "-")</td>
+                            <td class="px-6 py-3 text-sm">@(r.LatestWeight.HasValue ? r.LatestWeight.Value.ToString("0.0") + " kg" : "-")</td>
+                            <td class="px-6 py-3 text-sm">@(r.LatestBmi.HasValue ? r.LatestBmi.Value.ToString("0.0") : "-")</td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+@section scripts {
+    <script>
+        (function () {
+            new ApexCharts(document.querySelector("#client-chart"), {
+                chart: { type: "bar", height: 320, toolbar: { show: false } },
+                series: [{ name: "Workout logs", data: "@ViewBag.ClientSeries".split(",").map(Number) }],
+                xaxis: { categories: "@ViewBag.ClientLabels".split(",") },
+                colors: ["#22c55e"],
+                plotOptions: { bar: { borderRadius: 4, columnWidth: "45%" } },
+                dataLabels: { enabled: false },
+                grid: { strokeDashArray: 4 }
+            }).render();
+        })();
+    </script>
+}

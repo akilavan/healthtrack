@@ -1,0 +1,220 @@
+﻿@using System.Linq
+@using System.Collections.Generic
+@using coursework_2.Models
+@model WorkoutPlan
+@{
+    bool canEdit = ViewBag.CanEdit != null && (bool)ViewBag.CanEdit;
+    bool isClient = User.IsInRole("Client");
+    var exercises = ViewBag.Exercises as List<Exercise>;
+    var logs = ViewBag.Logs as List<WorkoutLog>;
+    var dayNames = new[] { "Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday" };
+}
+
+@if (TempData["Success"] != null)
+{
+    <div class="mb-4 rounded-md bg-success px-4 py-3 text-sm text-white">@TempData["Success"]</div>
+}
+@if (TempData["Error"] != null)
+{
+    <div class="mb-4 rounded-md bg-danger px-4 py-3 text-sm text-white">@TempData["Error"]</div>
+}
+
+<div class="card mb-6">
+    <div class="card-body flex flex-wrap gap-6 justify-between">
+        <div>
+            <p class="text-default-500 text-sm mb-1">Goal</p>
+            <h4 class="text-lg font-semibold text-default-900">@(string.IsNullOrEmpty(Model.Goal) ? "-" : Model.Goal)</h4>
+            <div class="flex items-center gap-3 mt-3">
+                @if (Model.Client != null && !string.IsNullOrEmpty(Model.Client.PhotoPath))
+                {
+                    <img src="@Url.Content(Model.Client.PhotoPath)" alt="@Model.Client.FullName"
+                         class="rounded-full h-10 w-10 object-cover" />
+                }
+                else
+                {
+                    <span class="flex items-center justify-center rounded-full h-10 w-10 bg-primary text-white text-xs font-medium">
+                        @(Model.Client == null || string.IsNullOrEmpty(Model.Client.FullName) ? "?" : Model.Client.FullName.Substring(0, 1).ToUpper())
+                    </span>
+                }
+                <div>
+                    <p class="text-default-500 text-sm">Client</p>
+                    <p class="text-default-800 text-sm">@(Model.Client != null ? Model.Client.FullName : "-")</p>
+                </div>
+            </div>
+            <p class="text-default-500 text-sm">Trainer: @(Model.Trainer != null ? Model.Trainer.FullName : "-")</p>
+        </div>
+        <div class="text-sm">
+            <p class="text-default-500 mb-1">Dates</p>
+            <p class="text-default-800">@Model.StartDate.ToString("dd MMM yyyy") - @(Model.EndDate.HasValue ? Model.EndDate.Value.ToString("dd MMM yyyy") : "open")</p>
+            <span class="inline-block mt-2 px-2 py-1 rounded-md text-xs @(Model.Status == "Active" ? "bg-success" : "bg-gray-500") text-white">@Model.Status</span>
+        </div>
+        @if (canEdit)
+        {
+            <div class="flex gap-2 items-start">
+                <a class="btn btn-sm bg-light text-gray-800" href="@Url.Action("Form", "Workouts", new { id = Model.PlanId })">Edit</a>
+                @using (Html.BeginForm("Delete", "Workouts", new { id = Model.PlanId }, FormMethod.Post, new { onsubmit = "return confirm('Delete this plan?');" }))
+                {
+                    @Html.AntiForgeryToken()
+                    <button type="submit" class="btn btn-sm bg-danger text-white">Delete</button>
+                }
+            </div>
+        }
+    </div>
+</div>
+
+@if (canEdit && exercises != null)
+{
+    <div class="card mb-6">
+        <div class="card-header"><h4 class="card-title">Add Exercise</h4></div>
+        <div class="card-body">
+            @using (Html.BeginForm("AddItem", "Workouts", FormMethod.Post))
+            {
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="planId" value="@Model.PlanId" />
+
+                <div class="grid md:grid-cols-3 gap-4">
+                    <div>
+                        <label class="block text-sm mb-1">Exercise</label>
+                        <select name="exerciseId" class="form-input" required>
+                            @foreach (var e in exercises)
+                            {
+                                <option value="@e.ExerciseId">@e.Name (@e.Category)</option>
+                            }
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm mb-1">Day</label>
+                        <select name="dayOfWeek" class="form-input" required>
+                            @for (byte d = 0; d < 7; d++)
+                            {
+                                <option value="@d">@dayNames[d]</option>
+                            }
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm mb-1">Sets</label>
+                        <input type="number" min="1" max="20" name="sets" class="form-input" />
+                    </div>
+                    <div>
+                        <label class="block text-sm mb-1">Reps</label>
+                        <input type="number" min="1" max="100" name="reps" class="form-input" />
+                    </div>
+                    <div>
+                        <label class="block text-sm mb-1">Duration (min)</label>
+                        <input type="number" min="1" max="300" name="durationMin" class="form-input" />
+                    </div>
+                    <div>
+                        <label class="block text-sm mb-1">Rest (sec)</label>
+                        <input type="number" min="0" max="600" name="restSec" class="form-input" />
+                    </div>
+                </div>
+
+                <div class="mt-4">
+                    <label class="block text-sm mb-1">Notes</label>
+                    <input type="text" name="notes" maxlength="250" class="form-input" placeholder="e.g. warm up 10 minutes" />
+                </div>
+
+                <button type="submit" class="btn bg-primary text-white mt-4">Add to plan</button>
+            }
+        </div>
+    </div>
+}
+
+<div class="grid lg:grid-cols-2 gap-6">
+    @for (byte d = 0; d < 7; d++)
+    {
+        var items = Model.Items.Where(i => i.DayOfWeek == d).OrderBy(i => i.PlanItemId).ToList();
+        if (items.Count == 0) { continue; }
+
+        <div class="card">
+            <div class="card-header"><h4 class="card-title">@dayNames[d]</h4></div>
+            <div class="card-body">
+                <ul class="divide-y divide-gray-200">
+                    @foreach (var item in items)
+                    {
+                        <li class="py-3">
+                            <div class="flex justify-between items-start gap-3">
+                                <div>
+                                    <p class="text-sm font-medium text-default-800">@(item.Exercise != null ? item.Exercise.Name : "-")</p>
+                                    <p class="text-sm text-default-500">
+                                        @if (item.Sets.HasValue || item.Reps.HasValue)
+                                        {
+                                            <span>@(item.Sets.HasValue ? item.Sets + " sets" : "") @(item.Reps.HasValue ? "x " + item.Reps + " reps" : "")</span>
+                                        }
+                                        @if (item.DurationMin.HasValue)
+                                        {
+                                            <span>@(item.DurationMin + " min")</span>
+                                        }
+                                        @if (item.RestSec.HasValue)
+                                        {
+                                            <span> - rest @(item.RestSec + "s")</span>
+                                        }
+                                    </p>
+                                    @if (!string.IsNullOrEmpty(item.Notes))
+                                    {
+                                        <p class="text-xs text-default-500 mt-1">@item.Notes</p>
+                                    }
+                                </div>
+
+                                @if (canEdit)
+                                {
+                                    using (Html.BeginForm("RemoveItem", "Workouts", FormMethod.Post))
+                                    {
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="id" value="@item.PlanItemId" />
+                                        <button type="submit" class="btn btn-sm bg-danger text-white">Remove</button>
+                                    }
+                                }
+                                else if (isClient)
+                                {
+                                    using (Html.BeginForm("LogItem", "Workouts", FormMethod.Post))
+                                    {
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="id" value="@item.PlanItemId" />
+                                        <button type="submit" class="btn btn-sm bg-primary text-white">Log today</button>
+                                    }
+                                }
+                            </div>
+                        </li>
+                    }
+                </ul>
+            </div>
+        </div>
+    }
+</div>
+
+<div class="card mt-6">
+    <div class="card-header"><h4 class="card-title">Recent Logs</h4></div>
+    <div class="overflow-x-auto">
+        <table class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-gray-50">
+                <tr>
+                    <th class="px-6 py-3 text-start text-sm text-default-500">Date</th>
+                    <th class="px-6 py-3 text-start text-sm text-default-500">Exercise</th>
+                    <th class="px-6 py-3 text-start text-sm text-default-500">Sets / Reps</th>
+                    <th class="px-6 py-3 text-start text-sm text-default-500">Duration</th>
+                    <th class="px-6 py-3 text-start text-sm text-default-500">Calories</th>
+                </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-200">
+                @if (logs == null || logs.Count == 0)
+                {
+                    <tr><td colspan="5" class="px-6 py-4 text-sm text-default-500">No logs yet.</td></tr>
+                }
+                else
+                {
+                    foreach (var l in logs)
+                    {
+                        <tr>
+                            <td class="px-6 py-3 text-sm">@l.LogDate.ToString("dd MMM yyyy")</td>
+                            <td class="px-6 py-3 text-sm">@(l.Exercise != null ? l.Exercise.Name : "-")</td>
+                            <td class="px-6 py-3 text-sm">@(l.Sets.HasValue ? l.Sets.ToString() : "-") / @(l.Reps.HasValue ? l.Reps.ToString() : "-")</td>
+                            <td class="px-6 py-3 text-sm">@(l.DurationMin.HasValue ? l.DurationMin + " min" : "-")</td>
+                            <td class="px-6 py-3 text-sm">@(l.CaloriesBurned.HasValue ? l.CaloriesBurned.Value.ToString("0.0") : "-")</td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

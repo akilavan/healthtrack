@@ -1,0 +1,16 @@
+﻿<!-- Icons css  (Mandatory in All Pages) -->
+<link href="@Url.Content("~/assets/css/icons.min.css")" rel="stylesheet" type="text/css">
+
+<!-- App css  (Mandatory in All Pages) -->
+<link href="@Url.Content("~/assets/css/app.min.css")" rel="stylesheet" type="text/css">
+
+<style>
+    label:has(+ input[required])::after,
+    label:has(+ select[required])::after,
+    label:has(+ textarea[required])::after,
+    label:has(+ div input[required])::after {
+        content: " *";
+        color: #ef4444;
+        margin-left: 0.15rem;
+    }
+</style>

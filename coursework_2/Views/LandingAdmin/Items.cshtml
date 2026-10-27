@@ -1,0 +1,131 @@
+@using coursework_2.Models
+@model LandingSection
+@{
+    var items = Model.Items == null
+        ? new List<LandingSectionItem>()
+        : Model.Items.OrderBy(i => i.SortOrder).ThenBy(i => i.ItemId).ToList();
+}
+
+@if (TempData["Success"] != null)
+{
+    <div class="mb-4 rounded-md bg-success px-4 py-3 text-sm text-white">@TempData["Success"]</div>
+}
+@if (TempData["Error"] != null)
+{
+    <div class="mb-4 rounded-md bg-danger px-4 py-3 text-sm text-white">@TempData["Error"]</div>
+}
+
+<div class="card mb-6">
+    <div class="card-body flex flex-wrap items-center justify-between gap-4">
+        <div>
+            <h4 class="card-title mb-1">@Model.Heading</h4>
+            <p class="text-default-500 text-sm mb-0">@Model.SectionType section &middot; @items.Count item(s)</p>
+        </div>
+        <div class="flex flex-wrap items-center gap-2">
+            <a href="@Url.Action("Form", "LandingAdmin", new { id = Model.SectionId })" class="btn bg-light text-gray-800">Edit section</a>
+            <a href="@Url.Action("Index", "LandingAdmin")" class="btn bg-light text-gray-800">Back to sections</a>
+            @if (LandingSection.SupportsItems(Model.SectionType))
+            {
+                <a href="@Url.Action("ItemForm", "LandingAdmin", new { sectionId = Model.SectionId })" class="btn bg-primary text-white">Add item</a>
+            }
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <h4 class="card-title">Items</h4>
+    </div>
+    <div class="card-body overflow-x-auto">
+        @if (!LandingSection.SupportsItems(Model.SectionType))
+        {
+            <div class="py-8 text-center">
+                <p class="text-default-500 text-sm mb-0">This section type does not use repeatable items.</p>
+            </div>
+        }
+        else if (items.Count == 0)
+        {
+            <div class="py-10 text-center">
+                <span class="material-symbols-rounded text-default-400" style="font-size:40px;">view_list</span>
+                <h5 class="mt-3 mb-2">No items yet</h5>
+                <p class="text-default-500 text-sm mb-4">Add the content cards that belong to this section.</p>
+                <a href="@Url.Action("ItemForm", "LandingAdmin", new { sectionId = Model.SectionId })" class="btn bg-primary text-white">Add the first item</a>
+            </div>
+        }
+        else
+        {
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-4 py-3 text-start text-sm text-default-500">Order</th>
+                        <th class="px-4 py-3 text-start text-sm text-default-500">Item</th>
+                        <th class="px-4 py-3 text-start text-sm text-default-500">Text</th>
+                        <th class="px-4 py-3 text-start text-sm text-default-500">Link</th>
+                        <th class="px-4 py-3 text-end text-sm text-default-500">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    @for (int i = 0; i < items.Count; i++)
+                    {
+                        var item = items[i];
+                        <tr>
+                            <td class="px-4 py-3 text-sm whitespace-nowrap">
+                                <div class="flex items-center gap-1">
+                                    @using (Html.BeginForm("ItemMove", "LandingAdmin", new { id = item.ItemId, direction = "up" }, FormMethod.Post, new { @class = "inline" }))
+                                    {
+                                        @Html.AntiForgeryToken()
+                                        <button type="submit" class="btn btn-sm bg-light text-gray-800" title="Move up" @(i == 0 ? "disabled" : null)>
+                                            <span class="material-symbols-rounded text-base">arrow_upward</span>
+                                        </button>
+                                    }
+                                    @using (Html.BeginForm("ItemMove", "LandingAdmin", new { id = item.ItemId, direction = "down" }, FormMethod.Post, new { @class = "inline" }))
+                                    {
+                                        @Html.AntiForgeryToken()
+                                        <button type="submit" class="btn btn-sm bg-light text-gray-800" title="Move down" @(i == items.Count - 1 ? "disabled" : null)>
+                                            <span class="material-symbols-rounded text-base">arrow_downward</span>
+                                        </button>
+                                    }
+                                    <span class="text-default-500 ms-1">@item.SortOrder</span>
+                                </div>
+                            </td>
+                            <td class="px-4 py-3 text-sm">
+                                <div class="flex items-center gap-3">
+                                    @if (!string.IsNullOrEmpty(item.ImagePath))
+                                    {
+                                        <img src="@Url.Content(item.ImagePath)" alt="@item.Title" style="width:44px;height:44px;object-fit:cover;" class="rounded-md border border-default-200">
+                                    }
+                                    <span class="font-medium text-default-800">@item.Title</span>
+                                </div>
+                            </td>
+                            <td class="px-4 py-3 text-sm text-default-600" style="max-width:420px;">@item.Text</td>
+                            <td class="px-4 py-3 text-sm">
+                                @if (!string.IsNullOrWhiteSpace(item.LinkText) || !string.IsNullOrWhiteSpace(item.LinkUrl))
+                                {
+                                    <span class="text-default-700">@item.LinkText</span>
+                                    <div class="text-default-400 text-xs">@item.LinkUrl</div>
+                                }
+                                else
+                                {
+                                    <span class="text-default-400">-</span>
+                                }
+                            </td>
+                            <td class="px-4 py-3 text-sm whitespace-nowrap text-end">
+                                <div class="flex flex-wrap items-center justify-end gap-2">
+                                    <a href="@Url.Action("ItemForm", "LandingAdmin", new { sectionId = Model.SectionId, id = item.ItemId })" class="btn btn-sm bg-light text-gray-800">Edit</a>
+                                    @using (Html.BeginForm("ItemDelete", "LandingAdmin", new { id = item.ItemId }, FormMethod.Post, new { @class = "inline" }))
+                                    {
+                                        @Html.AntiForgeryToken()
+                                        <button type="submit" class="btn btn-sm bg-danger/10 text-danger"
+                                                onclick="return confirm('Delete this item?');">
+                                            Delete
+                                        </button>
+                                    }
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+    </div>
+</div>

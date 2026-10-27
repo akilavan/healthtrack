@@ -1,0 +1,117 @@
+﻿@using coursework_2.Models
+@model List<Appointment>
+@{
+    bool isClient = User.IsInRole("Client");
+    bool isTrainer = User.IsInRole("Trainer");
+}
+
+@if (TempData["Success"] != null)
+{
+    <div class="mb-4 rounded-md bg-success px-4 py-3 text-sm text-white">@TempData["Success"]</div>
+}
+@if (TempData["Error"] != null)
+{
+    <div class="mb-4 rounded-md bg-danger px-4 py-3 text-sm text-white">@TempData["Error"]</div>
+}
+@if (isClient)
+{
+    int cancelWindowHours = coursework_2.Models.SettingsService.Current.CancellationWindowHours;
+    if (cancelWindowHours > 0)
+    {
+        <p class="text-default-500 text-sm mb-4">
+            Cancellations must be made at least @cancelWindowHours hours before the appointment start time.
+        </p>
+    }
+}
+
+<div class="card">
+    <div class="card-header flex justify-between items-center">
+        <h4 class="card-title">Appointments</h4>
+        @if (isClient)
+        {
+            <a href="@Url.Action("Book", "Appointments")" class="btn btn-sm bg-primary text-white">Book</a>
+        }
+    </div>
+
+    <div class="overflow-x-auto">
+        <table class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-gray-50">
+                <tr>
+                    <th class="px-6 py-3 text-start text-sm text-default-500">Requested</th>
+                    <th class="px-6 py-3 text-start text-sm text-default-500">When</th>
+                    @if (!isClient)
+                    {
+                        <th class="px-6 py-3 text-start text-sm text-default-500">Client</th>
+                    }
+                    @if (!isTrainer)
+                    {
+                        <th class="px-6 py-3 text-start text-sm text-default-500">Trainer</th>
+                    }
+                    <th class="px-6 py-3 text-start text-sm text-default-500">Purpose</th>
+                    <th class="px-6 py-3 text-start text-sm text-default-500">Status</th>
+                    <th class="px-6 py-3 text-end text-sm text-default-500">Actions</th>
+                </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-200">
+                @if (Model == null || Model.Count == 0)
+                {
+                    <tr><td colspan="7" class="px-6 py-4 text-sm text-default-500">No appointments.</td></tr>
+                }
+                else
+                {
+                    foreach (var a in Model)
+                    {
+            <tr>
+                <td class="px-6 py-3 text-sm">@a.CreatedAt.ToLocalTime().ToString("dd MMM yyyy HH:mm")</td>
+                <td class="px-6 py-3 text-sm">@a.StartTime.ToString("dd MMM yyyy HH:mm")</td>
+                @if (!isClient)
+                {
+                    <td class="px-6 py-3 text-sm">@(a.Client != null ? a.Client.FullName : "-")</td>
+                }
+                @if (!isTrainer)
+                {
+                    <td class="px-6 py-3 text-sm">@(a.Trainer != null ? a.Trainer.FullName : "-")</td>
+                }
+                <td class="px-6 py-3 text-sm">@a.Purpose</td>
+                <td class="px-6 py-3 text-sm"><span class="inline-block px-2 py-1 rounded-md text-xs bg-gray-500 text-white">@a.Status</span></td>
+                <td class="px-6 py-3 text-sm text-end">
+                    @if (!isClient && a.Status == "Pending")
+                    {
+                        using (Html.BeginForm("SetStatus", "Appointments", new { id = a.AppointmentId, status = "Confirmed" }, FormMethod.Post, new { @class = "inline" }))
+                        {
+                            @Html.AntiForgeryToken()
+                            <button type="submit" class="btn btn-sm bg-success text-white">Confirm</button>
+                        }
+                    }
+                    @if (!isClient && a.Status == "Confirmed")
+                    {
+                        using (Html.BeginForm("SetStatus", "Appointments", new { id = a.AppointmentId, status = "Completed" }, FormMethod.Post, new { @class = "inline" }))
+                        {
+                            @Html.AntiForgeryToken()
+                            <button type="submit" class="btn btn-sm bg-primary text-white">Complete</button>
+                        }
+                    }
+                    @if (a.Status == "Pending" || a.Status == "Confirmed")
+                    {
+                        using (Html.BeginForm("SetStatus", "Appointments", new { id = a.AppointmentId, status = "Cancelled" }, FormMethod.Post, new { @class = "inline", onsubmit = "return confirm('Cancel this appointment?');" }))
+                        {
+                            @Html.AntiForgeryToken()
+                            <button type="submit" class="btn btn-sm bg-danger text-white">Cancel</button>
+                        }
+                    }
+                    @if (a.Status == "Cancelled")
+                    {
+                        using (Html.BeginForm("Delete", "Appointments", new { id = a.AppointmentId }, FormMethod.Post, new { @class = "inline", onsubmit = "return confirm('Delete permanently?');" }))
+                        {
+                            @Html.AntiForgeryToken()
+                            <button type="submit" class="btn btn-sm bg-light text-gray-800">Delete</button>
+                        }
+                    }
+                </td>
+            </tr>
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

@@ -1,0 +1,129 @@
+﻿@using System.Collections.Generic
+@using coursework_2.Models
+@{
+    var today = ViewBag.TodayAppointments as List<Appointment>;
+    var upcoming = ViewBag.Upcoming as List<Appointment>;
+    var clients = ViewBag.MyClients as List<User>;
+    var lastLogs = ViewBag.LastLogDates as Dictionary<int, DateTime>;
+}
+
+<div class="grid lg:grid-cols-4 md:grid-cols-2 gap-6 mb-6">
+    <div class="card">
+        <div class="card-body">
+            <div class="flex justify-between items-center">
+                <div>
+                    <p class="text-default-500 text-sm mb-1">My Clients</p>
+                    <h4 class="text-xl font-semibold text-default-900">@ViewBag.ClientCount</h4>
+                </div>
+                <div class="rounded-lg flex justify-center items-center size-16 bg-primary/10 text-primary">
+                    <span class="material-symbols-rounded text-4xl">group</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+            <div class="flex justify-between items-center">
+                <div>
+                    <p class="text-default-500 text-sm mb-1">Appointments Today</p>
+                    <h4 class="text-xl font-semibold text-default-900">@(today != null ? today.Count : 0)</h4>
+                </div>
+                <div class="rounded-lg flex justify-center items-center size-16 bg-info/10 text-info">
+                    <span class="material-symbols-rounded text-4xl">calendar_month</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+            <div class="flex justify-between items-center">
+                <div>
+                    <p class="text-default-500 text-sm mb-1">Active Plans</p>
+                    <h4 class="text-xl font-semibold text-default-900">@ViewBag.ActivePlans</h4>
+                </div>
+                <div class="rounded-lg flex justify-center items-center size-16 bg-success/10 text-success">
+                    <span class="material-symbols-rounded text-4xl">assignment</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+            <div class="flex justify-between items-center">
+                <div>
+                    <p class="text-default-500 text-sm mb-1">Client Logs This Week</p>
+                    <h4 class="text-xl font-semibold text-default-900">@ViewBag.LogsThisWeek</h4>
+                </div>
+                <div class="rounded-lg flex justify-center items-center size-16 bg-danger text-white">
+                    <span class="material-symbols-rounded text-4xl">fitness_center</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="grid xl:grid-cols-3 gap-6 mb-6">
+    <div class="xl:col-span-2 card">
+        <div class="card-header flex justify-between items-center">
+            <h4 class="card-title">My Clients</h4>
+            <a href="@Url.Action("Index", "Clients")" class="btn btn-sm bg-light text-gray-800">Manage</a>
+        </div>
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-6 py-3 text-start text-sm text-default-500">Client</th>
+                        <th class="px-6 py-3 text-start text-sm text-default-500">Email</th>
+                        <th class="px-6 py-3 text-start text-sm text-default-500">Last Log</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    @if (clients == null || clients.Count == 0)
+                    {
+                        <tr><td colspan="3" class="px-6 py-4 text-sm text-default-500">No clients assigned yet.</td></tr>
+                    }
+                    else
+                    {
+                        foreach (var c in clients)
+                        {
+                            DateTime? last = lastLogs != null && lastLogs.ContainsKey(c.UserId) ? lastLogs[c.UserId] : (DateTime?)null;
+                            <tr>
+                                <td class="px-6 py-3 text-sm text-default-800">@c.FullName</td>
+                                <td class="px-6 py-3 text-sm">@c.Email</td>
+                                <td class="px-6 py-3 text-sm">@(last.HasValue ? last.Value.ToString("dd MMM yyyy") : "No logs")</td>
+                            </tr>
+                        }
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <h4 class="card-title">Upcoming Appointments</h4>
+        </div>
+        <div class="card-body">
+            @if (upcoming == null || upcoming.Count == 0)
+            {
+                <p class="text-default-500 text-sm">Nothing scheduled.</p>
+            }
+            else
+            {
+                <ul class="divide-y divide-gray-200">
+                    @foreach (var a in upcoming)
+                    {
+                        <li class="py-3">
+                            <p class="text-sm font-medium text-default-800">@(a.Client != null ? a.Client.FullName : "Client")</p>
+                            <p class="text-sm text-default-500">@a.StartTime.ToString("dd MMM, h:mm tt")</p>
+                            <span class="inline-block mt-1 px-2 py-1 rounded-md text-xs bg-warning text-white">@a.Status</span>
+                        </li>
+                    }
+                </ul>
+            }
+        </div>
+    </div>
+</div>

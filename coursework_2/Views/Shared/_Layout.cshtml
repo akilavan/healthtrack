@@ -1,0 +1,35 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    @Html.Partial("_TitleMeta")
+    @Html.Partial("_HeadCss")
+    @RenderSection("styles", required: false)
+</head>
+<body>
+
+    <div class="wrapper">
+
+        @Html.Partial("_SideNav")
+
+        <!-- Start Page Content here -->
+        <div class="page-content">
+
+            @Html.Partial("_TopBar")
+
+            <main>
+                @Html.Partial("_PageTitle")
+                @RenderBody()
+            </main>
+
+            @Html.Partial("_Footer")
+
+        </div>
+        <!-- End Page content -->
+
+    </div>
+
+    @Html.Partial("_FooterScripts")
+    @RenderSection("scripts", required: false)
+
+</body>
+</html>

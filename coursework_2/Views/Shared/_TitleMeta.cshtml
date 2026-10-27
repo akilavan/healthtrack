@@ -1,0 +1,12 @@
+﻿@{
+    var pageTitle = string.IsNullOrEmpty(ViewBag.Title as string) ? "Dashboard" : (string)ViewBag.Title;
+    var appSettings = coursework_2.Models.SettingsService.Current;
+}
+<meta charset="utf-8">
+<title>@pageTitle | @appSettings.CompanyName</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta content="@(appSettings.Tagline ?? "Health and fitness management system")" name="description">
+<meta content="MyraStudio" name="author">
+
+<!-- App favicon -->
+<link rel="shortcut icon" href="@Url.Content("~/assets/images/favicon.ico")">

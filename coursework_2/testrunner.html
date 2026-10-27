@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html><body>
+<script>
+(function(){
+  var params = new URLSearchParams(location.search);
+  var role = params.get('role') || 'client';
+  var creds = {
+    admin: {email:'admin@healthtrack.lk', password:'Admin@123', next:'/Dashboard/Admin'},
+    trainer: {email:'traineruser@example.com', password:'Pass@1234', next:'/Dashboard/Trainer'},
+    client: {email:'testclient02@example.com', password:'Pass@1234', next:'/Dashboard/Client'}
+  };
+  var c = creds[role];
+  fetch('/Account/Login').then(r=>r.text()).then(html=>{
+    var m = html.match(/name="__RequestVerificationToken" type="hidden" value="([^"]+)"/);
+    var token = m ? m[1] : '';
+    var form = document.createElement('form');
+    form.method='POST'; form.action='/Account/Login';
+    function add(name,val){ var i=document.createElement('input'); i.type='hidden'; i.name=name; i.value=val; form.appendChild(i);}
+    add('email', c.email);
+    add('password', c.password);
+    add('__RequestVerificationToken', token);
+    document.body.appendChild(form);
+    // after login, redirect
+    setTimeout(function(){ window.location.href = c.next; }, 100);
+    form.submit();
+  });
+})();
+</script>
+</body></html>

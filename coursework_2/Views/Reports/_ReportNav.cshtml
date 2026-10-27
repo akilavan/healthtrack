@@ -1,0 +1,13 @@
+﻿@{
+    var current = (ViewContext.RouteData.Values["action"] ?? "").ToString();
+    Func<string, string> tab = a =>
+        string.Equals(current, a, StringComparison.OrdinalIgnoreCase)
+            ? "btn btn-sm bg-primary text-white"
+            : "btn btn-sm bg-light text-gray-800";
+}
+<div class="flex flex-wrap gap-2 mb-6">
+    <a class="@tab("Index")" href="@Url.Action("Index", "Reports")">Overview</a>
+    <a class="@tab("ClientPerformance")" href="@Url.Action("ClientPerformance", "Reports")">Client Performance</a>
+    <a class="@tab("PopularRoutines")" href="@Url.Action("PopularRoutines", "Reports")">Popular Routines</a>
+    <a class="@tab("Engagement")" href="@Url.Action("Engagement", "Reports")">Engagement</a>
+</div>

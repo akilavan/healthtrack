@@ -1,0 +1,93 @@
+﻿<!-- Topbar Start -->
+@{
+    var me = ViewBag.CurrentUser as coursework_2.Models.User;
+    var appSettings = coursework_2.Models.SettingsService.Current;
+    var logoUrl = string.IsNullOrEmpty(appSettings.LogoPath)
+        ? Url.Content("~/assets/images/logo-sm.png")
+        : Url.Content(appSettings.LogoPath);
+    var displayName = me != null ? me.FullName : User.Identity.Name;
+    var roleName = User.IsInRole("Admin") ? "Administrator" : (User.IsInRole("Trainer") ? "Trainer" : "Client");
+    var initials = string.IsNullOrEmpty(displayName) ? "?" : displayName.Trim().Substring(0, 1).ToUpperInvariant();
+    int unreadTop = ViewBag.UnreadNotifications != null ? (int)ViewBag.UnreadNotifications : 0;
+}
+<header class="app-header sticky top-0 z-50 h-topbar flex items-center px-5 bg-white border-b border-default-200">
+    <div class="container flex items-center gap-4">
+        <!-- Topbar Brand Logo -->
+        <a href="@Url.Action("Index", "Home")" class="md:hidden flex">
+            <img src="@logoUrl" class="h-6" alt="@appSettings.CompanyName">
+        </a>
+
+        <!-- Sidenav Menu Toggle Button -->
+        <button id="button-toggle-menu" class="text-default-500 hover:text-default-600 p-2 rounded-full cursor-pointer"
+                data-hs-overlay="#app-menu" aria-label="Toggle navigation">
+            <i class="i-tabler-menu-2 text-2xl"></i>
+        </button>
+
+        <!-- Topbar Search -->
+        <div class="md:flex hidden items-center relative">
+            
+        </div>
+
+        <!-- Language Dropdown Button -->
+        <div class="ms-auto hs-dropdown relative inline-flex [--placement:bottom-right]">
+            
+        </div>
+
+        <!-- Fullscreen Toggle Button -->
+        <div class="md:flex hidden">
+            <button data-toggle="fullscreen" type="button" class="p-2">
+                <span class="sr-only">Fullscreen Mode</span>
+                <span class="flex items-center justify-center size-6">
+                    <i class="i-tabler-maximize text-2xl flex group-[-fullscreen]:hidden"></i>
+                    <i class="i-tabler-minimize text-2xl hidden group-[-fullscreen]:flex"></i>
+                </span>
+            </button>
+        </div>
+
+        <!-- Profile Dropdown Button -->
+        <!-- Notifications -->
+        <a href="@Url.Action("Index", "Notifications")" class="relative p-2">
+            <span class="material-symbols-rounded text-2xl text-default-500">notifications</span>
+            @if (unreadTop > 0)
+            {
+                <span class="absolute top-0 end-0 inline-flex items-center justify-center size-4 rounded-full bg-danger text-white text-xs">@unreadTop</span>
+            }
+        </a>
+
+        <!-- Profile Dropdown -->
+        <div class="relative">
+            <div class="hs-dropdown relative inline-flex [--placement:bottom-right]">
+                <button type="button" class="hs-dropdown-toggle flex items-center gap-2">
+                    @if (me != null && !string.IsNullOrEmpty(me.PhotoPath))
+                    {
+                        <img src="@Url.Content(me.PhotoPath)" alt="@displayName" class="rounded-full h-10 w-10 object-cover">
+                    }
+                    else
+                    {
+                        <span class="flex items-center justify-center rounded-full h-10 w-10 bg-primary text-white text-sm font-medium">@initials</span>
+                    }
+                    <span class="hidden md:block text-start leading-tight">
+                        <span class="block text-sm font-medium text-default-800">@displayName</span>
+                        <span class="block text-xs text-default-500">@roleName</span>
+                    </span>
+                </button>
+                <div class="hs-dropdown-menu duration mt-2 min-w-48 rounded-lg border border-default-200 bg-white p-2 opacity-0 shadow-md transition-[opacity,margin] hs-dropdown-open:opacity-100 hidden">
+                    <a class="flex items-center py-2 px-3 rounded-md text-sm text-default-800 hover:bg-gray-100"
+                       href="@Url.Action("Index", "Profile")">
+                        My Profile
+                    </a>
+                    <a class="flex items-center py-2 px-3 rounded-md text-sm text-default-800 hover:bg-gray-100"
+                       href="@Url.Action("Index", "Notifications")">
+                        Notifications
+                    </a>
+                    <hr class="my-2">
+                    <a class="flex items-center py-2 px-3 rounded-md text-sm text-danger hover:bg-gray-100"
+                       href="@Url.Action("Logout", "Account")">
+                        Log Out
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</header>
+<!-- Topbar End -->

@@ -1,0 +1,155 @@
+@using System.Collections.Generic
+@using coursework_2.Models
+@model List<TrainerClient>
+@{
+    var trainers = ViewBag.Trainers as List<User>;
+    var clients = ViewBag.Clients as List<User>;
+}
+
+@if (TempData["Success"] != null)
+{
+    <div class="mb-4 rounded-md bg-success px-4 py-3 text-sm text-white">@TempData["Success"]</div>
+}
+@if (TempData["Error"] != null)
+{
+    <div class="mb-4 rounded-md bg-danger px-4 py-3 text-sm text-white">@TempData["Error"]</div>
+}
+
+@if (ViewBag.PendingRequests != null && ((List<User>)ViewBag.PendingRequests).Count > 0)
+{
+    var pending = (List<User>)ViewBag.PendingRequests;
+    var messages = ViewBag.RequestMessages as Dictionary<int, string>;
+    var trainerList = ViewBag.Trainers as List<User>;
+    <div class="card mb-6">
+        <div class="card-header"><h4 class="card-title">Pending Trainer Requests</h4></div>
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-6 py-3 text-start text-sm text-default-500">Client</th>
+                        <th class="px-6 py-3 text-start text-sm text-default-500">Message</th>
+                        <th class="px-6 py-3 text-start text-sm text-default-500">Trainer</th>
+                        <th class="px-6 py-3 text-end text-sm text-default-500"></th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    @foreach (var c in pending)
+                    {
+                        <tr>
+                            <td class="px-6 py-3 text-sm">@c.FullName (@c.Email)</td>
+                            <td class="px-6 py-3 text-sm">@(messages != null && messages.ContainsKey(c.UserId) ? messages[c.UserId] : "-")</td>
+                            <td class="px-6 py-3 text-sm">
+                                <form action="/Assignments/Create" method="post" class="flex items-center gap-2">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="clientId" value="@c.UserId" />
+                                    <input type="hidden" name="status" value="Active" />
+                                    <select name="trainerId" class="form-input" required>
+                                        @if (trainerList != null)
+                                        {
+                                            foreach (var t in trainerList)
+                                            {
+                                                <option value="@t.UserId">@t.FullName</option>
+                                            }
+                                        }
+                                    </select>
+                                    <button type="submit" class="btn btn-sm bg-primary text-white">Assign</button>
+                                </form>
+                            </td>
+                            <td class="px-6 py-3 text-sm text-end"></td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+}
+
+<div class="card mb-6">
+    <div class="card-header"><h4 class="card-title">Assign Client to Trainer</h4></div>
+    <div class="card-body">
+        @using (Html.BeginForm("Create", "Assignments", FormMethod.Post))
+        {
+            @Html.AntiForgeryToken()
+            <div class="grid md:grid-cols-3 gap-4">
+                <div>
+                    <label class="block text-sm mb-1">Trainer</label>
+                    <select name="trainerId" class="form-input" required>
+                        @if (trainers != null)
+                        {
+                            foreach (var t in trainers)
+                            {
+                                <option value="@t.UserId">@t.FullName</option>
+                            }
+                        }
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm mb-1">Client</label>
+                    <select name="clientId" class="form-input" required>
+                        @if (clients != null)
+                        {
+                            foreach (var c in clients)
+                            {
+                                <option value="@c.UserId">@c.FullName (@c.Email)</option>
+                            }
+                        }
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm mb-1">Status</label>
+                    <select name="status" class="form-input">
+                        <option value="Active">Active</option>
+                        <option value="Inactive">Inactive</option>
+                    </select>
+                </div>
+            </div>
+            <button type="submit" class="btn bg-primary text-white mt-4">Assign</button>
+        }
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header"><h4 class="card-title">Assignments</h4></div>
+    <div class="overflow-x-auto">
+        <table class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-gray-50">
+                <tr>
+                    <th class="px-6 py-3 text-start text-sm text-default-500">Trainer</th>
+                    <th class="px-6 py-3 text-start text-sm text-default-500">Client</th>
+                    <th class="px-6 py-3 text-start text-sm text-default-500">Assigned by</th>
+                    <th class="px-6 py-3 text-start text-sm text-default-500">Assigned at</th>
+                    <th class="px-6 py-3 text-start text-sm text-default-500">Status</th>
+                    <th class="px-6 py-3 text-end text-sm text-default-500"></th>
+                </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-200">
+                @if (Model == null || Model.Count == 0)
+                {
+                    <tr><td colspan="6" class="px-6 py-4 text-sm text-default-500">No assignments yet.</td></tr>
+                }
+                else
+                {
+                    foreach (var a in Model)
+                    {
+                        <tr>
+                            <td class="px-6 py-3 text-sm">@(a.Trainer != null ? a.Trainer.FullName : "-")</td>
+                            <td class="px-6 py-3 text-sm">@(a.Client != null ? a.Client.FullName : "-")</td>
+                            <td class="px-6 py-3 text-sm">@(a.AssignedByUser != null ? a.AssignedByUser.FullName : "-")</td>
+                            <td class="px-6 py-3 text-sm">@a.AssignedAt.ToLocalTime().ToString("dd MMM yyyy")</td>
+                            <td class="px-6 py-3 text-sm">
+                                <span class="inline-block px-2 py-1 rounded-md text-xs @(a.Status == "Active" ? "bg-success" : "bg-gray-500") text-white">@a.Status</span>
+                            </td>
+                            <td class="px-6 py-3 text-sm text-end">
+                                @using (Html.BeginForm("Delete", "Assignments", new { id = a.AssignmentId }, FormMethod.Post, new { onsubmit = "return confirm('Remove this assignment?');" }))
+                                {
+                                    @Html.AntiForgeryToken()
+                                    <button type="submit" class="btn btn-sm bg-danger text-white">Remove</button>
+                                }
+                            </td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

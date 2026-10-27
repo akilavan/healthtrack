@@ -1,0 +1,343 @@
+@using System
+@using System.Collections.Generic
+@using System.Linq
+@using coursework_2.Models
+@model IList<LandingSection>
+@{
+    Layout = "~/Views/Shared/_LandingLayout.cshtml";
+    var preview = ViewBag.Preview != null && (bool)ViewBag.Preview;
+    var usedAnchors = new HashSet<string>();
+    var featureIcons = new[] { "fitness_center", "restaurant", "monitoring", "event_available", "self_improvement" };
+    var appSettings = SettingsService.Current;
+
+    Func<string, string> link = raw =>
+    {
+        if (string.IsNullOrWhiteSpace(raw)) return "#";
+        raw = raw.Trim();
+        if (raw.StartsWith("#") || raw.StartsWith("http://", StringComparison.OrdinalIgnoreCase)
+            || raw.StartsWith("https://", StringComparison.OrdinalIgnoreCase))
+        {
+            return raw;
+        }
+        return Url.Content(raw);
+    };
+}
+
+@if (Model == null || Model.Count == 0)
+{
+    <div class="landing-section landing-bg-primary">
+        <div class="landing-container">
+            <div style="max-width:760px;margin:0 auto;text-align:center;">
+                <div class="landing-eyebrow">Welcome to @appSettings.CompanyName</div>
+                <h1 style="font-size:clamp(40px,6vw,66px);font-weight:850;letter-spacing:-0.04em;line-height:1.08;margin:0;">
+                    A healthier routine starts here
+                </h1>
+                <p class="landing-lead" style="margin-left:auto;margin-right:auto;">
+                    @(appSettings.Tagline ?? "Personal health and fitness management, all in one clear space.")
+                </p>
+                <div class="landing-actions" style="justify-content:center;">
+                    <a href="@Url.Action("Register", "Account")" class="landing-btn landing-btn-ghost">Create your account</a>
+                    <a href="@Url.Action("Login", "Account")" class="landing-btn landing-btn-light">Sign in</a>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+else
+{
+    foreach (var s in Model)
+    {
+        var items = s.Items == null
+            ? new List<LandingSectionItem>()
+            : s.Items.OrderBy(i => i.SortOrder).ThenBy(i => i.ItemId).ToList();
+
+        var anchor = s.SectionType.ToLowerInvariant();
+        var sectionId = usedAnchors.Add(anchor) ? anchor : "section-" + s.SectionId;
+        var onDark = s.BackgroundStyle == "primary" || s.BackgroundStyle == "dark";
+        var heroButtonClass = onDark ? "landing-btn landing-btn-ghost" : "landing-btn landing-btn-primary";
+
+        <div id="@sectionId" class="landing-section landing-bg-@s.BackgroundStyle">
+            <div class="landing-container">
+                @if (preview && !s.IsPublished)
+                {
+                    <span class="landing-draft">Hidden from public page</span>
+                }
+
+                @if (s.SectionType == "Hero")
+                {
+                    <div class="landing-hero">
+                        <div>
+                            <div class="landing-eyebrow">
+                                <span class="material-symbols-rounded" style="font-size:16px;">verified</span>
+                                @appSettings.CompanyName
+                            </div>
+                            <h1>@s.Heading</h1>
+                            @if (!string.IsNullOrWhiteSpace(s.Subheading))
+                            {
+                                <p class="landing-lead">@s.Subheading</p>
+                            }
+                            @if (!string.IsNullOrWhiteSpace(s.Body))
+                            {
+                                <p class="landing-copy">@s.Body</p>
+                            }
+
+                            <div class="landing-actions">
+                                @if (!string.IsNullOrWhiteSpace(s.ButtonText) && !string.IsNullOrWhiteSpace(s.ButtonUrl))
+                                {
+                                    <a href="@link(s.ButtonUrl)" class="@heroButtonClass">
+                                        @s.ButtonText
+                                        <span class="material-symbols-rounded" style="font-size:18px;">arrow_forward</span>
+                                    </a>
+                                }
+                                <a href="@Url.Action("Login", "Account")" class="landing-btn landing-btn-light">Sign in</a>
+                            </div>
+
+                            <div class="landing-trust">
+                                <span><span class="material-symbols-rounded" style="font-size:18px;">check_circle</span> Personalised plans</span>
+                                <span><span class="material-symbols-rounded" style="font-size:18px;">check_circle</span> Clear progress tracking</span>
+                                <span><span class="material-symbols-rounded" style="font-size:18px;">check_circle</span> Trainer support</span>
+                            </div>
+                        </div>
+
+                        <div class="landing-hero-art">
+                            @if (!string.IsNullOrEmpty(s.ImagePath))
+                            {
+                                <img src="@Url.Content(s.ImagePath)" alt="@s.Heading" class="landing-art-image">
+                            }
+                            else
+                            {
+                                <div class="landing-hero-art-inner">
+                                    <div class="landing-art-top">
+                                        <div>
+                                            <div class="landing-art-title">Your week at a glance</div>
+                                            <div class="landing-art-subtitle">A simple view of what matters</div>
+                                        </div>
+                                        <div class="landing-art-dots"><span></span><span></span><span></span></div>
+                                    </div>
+
+                                    <div class="landing-progress-row">
+                                        <div class="landing-ring">
+                                            <div class="landing-ring-inner">
+                                                <div>
+                                                    <span class="landing-ring-value">76%</span>
+                                                    <span class="landing-ring-label">on track</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="landing-art-metrics">
+                                            <div class="landing-metric"><span>Workouts</span><strong>4 / 5</strong></div>
+                                            <div class="landing-metric"><span>Meals logged</span><strong>18</strong></div>
+                                            <div class="landing-metric"><span>Next session</span><strong>Tomorrow</strong></div>
+                                        </div>
+                                    </div>
+
+                                    <div class="landing-art-bars">
+                                        <span style="height:36%;"></span>
+                                        <span style="height:58%;"></span>
+                                        <span style="height:47%;"></span>
+                                        <span style="height:82%;"></span>
+                                        <span style="height:64%;"></span>
+                                        <span style="height:94%;"></span>
+                                        <span style="height:72%;"></span>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                }
+                else if (s.SectionType == "Features")
+                {
+                    <div class="landing-section-head">
+                        <div class="landing-eyebrow">Why HealthTrack</div>
+                        <h2>@s.Heading</h2>
+                        @if (!string.IsNullOrWhiteSpace(s.Subheading))
+                        {
+                            <p class="landing-section-intro">@s.Subheading</p>
+                        }
+                    </div>
+
+                    <div class="landing-grid">
+                        @for (int i = 0; i < items.Count; i++)
+                        {
+                            var item = items[i];
+                            <div class="landing-card">
+                                @if (!string.IsNullOrEmpty(item.ImagePath))
+                                {
+                                    <img src="@Url.Content(item.ImagePath)" alt="@item.Title" class="landing-card-image">
+                                }
+                                else
+                                {
+                                    <span class="landing-icon">
+                                        <span class="material-symbols-rounded">@featureIcons[i % featureIcons.Length]</span>
+                                    </span>
+                                }
+                                <h3>@item.Title</h3>
+                                <p>@item.Text</p>
+                                @if (!string.IsNullOrWhiteSpace(item.LinkText) && !string.IsNullOrWhiteSpace(item.LinkUrl))
+                                {
+                                    <a href="@link(item.LinkUrl)" class="text-primary" style="display:inline-flex;align-items:center;gap:4px;margin-top:16px;font-size:13px;font-weight:700;">
+                                        @item.LinkText
+                                        <span class="material-symbols-rounded" style="font-size:16px;">arrow_forward</span>
+                                    </a>
+                                }
+                            </div>
+                        }
+                    </div>
+                }
+                else if (s.SectionType == "About")
+                {
+                    <div class="landing-about">
+                        <div>
+                            <div class="landing-eyebrow">About the platform</div>
+                            <h2>@s.Heading</h2>
+                            @if (!string.IsNullOrWhiteSpace(s.Subheading))
+                            {
+                                <p class="landing-lead" style="font-size:18px;">@s.Subheading</p>
+                            }
+                            @if (!string.IsNullOrWhiteSpace(s.Body))
+                            {
+                                <p class="landing-copy">@s.Body</p>
+                            }
+                            @if (!string.IsNullOrWhiteSpace(s.ButtonText) && !string.IsNullOrWhiteSpace(s.ButtonUrl))
+                            {
+                                <div class="landing-actions">
+                                    <a href="@link(s.ButtonUrl)" class="landing-btn landing-btn-primary">@s.ButtonText</a>
+                                </div>
+                            }
+                        </div>
+
+                        <div>
+                            @if (!string.IsNullOrEmpty(s.ImagePath))
+                            {
+                                <img src="@Url.Content(s.ImagePath)" alt="@s.Heading" class="landing-about-image">
+                            }
+                            else
+                            {
+                                <div class="landing-about-panel">
+                                    <span class="landing-about-panel-icon">
+                                        <span class="material-symbols-rounded" style="font-size:30px;">monitor_heart</span>
+                                    </span>
+                                    <div>
+                                        <div class="landing-about-points">
+                                            <span><span class="material-symbols-rounded">check_circle</span> One shared view for clients and trainers</span>
+                                            <span><span class="material-symbols-rounded">check_circle</span> Plans, meals and progress in one place</span>
+                                            <span><span class="material-symbols-rounded">check_circle</span> Simple daily actions that add up</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                }
+                else if (s.SectionType == "Stats")
+                {
+                    <div class="landing-section-head">
+                        <div class="landing-eyebrow">A clearer picture</div>
+                        <h2>@s.Heading</h2>
+                        @if (!string.IsNullOrWhiteSpace(s.Subheading))
+                        {
+                            <p class="landing-section-intro">@s.Subheading</p>
+                        }
+                    </div>
+
+                    <div class="landing-stat-grid">
+                        @foreach (var item in items)
+                        {
+                            <div class="landing-stat">
+                                <span class="landing-stat-value">@item.Title</span>
+                                <span class="landing-stat-label">@item.Text</span>
+                            </div>
+                        }
+                    </div>
+                }
+                else if (s.SectionType == "Testimonials")
+                {
+                    <div class="landing-section-head">
+                        <div class="landing-eyebrow">Real routines</div>
+                        <h2>@s.Heading</h2>
+                        @if (!string.IsNullOrWhiteSpace(s.Subheading))
+                        {
+                            <p class="landing-section-intro">@s.Subheading</p>
+                        }
+                    </div>
+
+                    <div class="landing-grid">
+                        @foreach (var item in items)
+                        {
+                            <div class="landing-card landing-quote">
+                                <span class="landing-quote-mark">&ldquo;</span>
+                                <p>@item.Text</p>
+                                <strong>@item.Title</strong>
+                            </div>
+                        }
+                    </div>
+                }
+                else if (s.SectionType == "FAQ")
+                {
+                    <div class="landing-section-head">
+                        <div class="landing-eyebrow">Good to know</div>
+                        <h2>@s.Heading</h2>
+                        @if (!string.IsNullOrWhiteSpace(s.Subheading))
+                        {
+                            <p class="landing-section-intro">@s.Subheading</p>
+                        }
+                    </div>
+
+                    <div class="landing-faq">
+                        @foreach (var item in items)
+                        {
+                            <details>
+                                <summary>@item.Title</summary>
+                                <p>@item.Text</p>
+                                @if (!string.IsNullOrWhiteSpace(item.LinkText) && !string.IsNullOrWhiteSpace(item.LinkUrl))
+                                {
+                                    <a href="@link(item.LinkUrl)" class="text-primary" style="display:inline-block;margin-top:10px;font-size:13px;font-weight:700;">@item.LinkText</a>
+                                }
+                            </details>
+                        }
+                    </div>
+                }
+                else if (s.SectionType == "CTA")
+                {
+                    <div class="landing-cta">
+                        <div class="landing-eyebrow">Take the next step</div>
+                        <h2>@s.Heading</h2>
+                        @if (!string.IsNullOrWhiteSpace(s.Subheading))
+                        {
+                            <p class="landing-section-intro">@s.Subheading</p>
+                        }
+                        @if (!string.IsNullOrWhiteSpace(s.Body))
+                        {
+                            <p class="landing-copy">@s.Body</p>
+                        }
+                        <div class="landing-actions">
+                            @if (!string.IsNullOrWhiteSpace(s.ButtonText) && !string.IsNullOrWhiteSpace(s.ButtonUrl))
+                            {
+                                <a href="@link(s.ButtonUrl)" class="landing-btn landing-btn-ghost">
+                                    @s.ButtonText
+                                    <span class="material-symbols-rounded" style="font-size:18px;">arrow_forward</span>
+                                </a>
+                            }
+                            else
+                            {
+                                <a href="@Url.Action("Register", "Account")" class="landing-btn landing-btn-ghost">Create your account</a>
+                            }
+                        </div>
+                    </div>
+                }
+                else
+                {
+                    <div class="landing-section-head">
+                        <div class="landing-eyebrow">@s.SectionType</div>
+                        <h2>@s.Heading</h2>
+                        @if (!string.IsNullOrWhiteSpace(s.Subheading))
+                        {
+                            <p class="landing-section-intro">@s.Subheading</p>
+                        }
+                    </div>
+                    <p class="landing-copy" style="max-width:760px;margin:0 auto;text-align:center;">@s.Body</p>
+                }
+            </div>
+        </div>
+    }
+}

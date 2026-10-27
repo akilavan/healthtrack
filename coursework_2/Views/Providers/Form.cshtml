@@ -1,0 +1,48 @@
+﻿@using coursework_2.Models
+@model HealthcareProvider
+
+<div class="card">
+    <div class="card-header"><h4 class="card-title">@ViewBag.Title</h4></div>
+    <div class="card-body">
+        @if (ViewBag.Error != null)
+        {
+            <div class="mb-4 rounded-md bg-danger px-4 py-3 text-sm text-white">@ViewBag.Error</div>
+        }
+
+        @using (Html.BeginForm("Form", "Providers", FormMethod.Post))
+        {
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="id" value="@(Model.ProviderId > 0 ? Model.ProviderId.ToString() : "")" />
+
+            <div class="grid md:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm mb-1">Full name</label>
+                    <input type="text" name="fullName" maxlength="120" class="form-input" value="@Model.FullName" required />
+                </div>
+                <div>
+                    <label class="block text-sm mb-1">Specialty</label>
+                    <input type="text" name="specialty" maxlength="80" class="form-input" value="@Model.Specialty" required />
+                </div>
+                <div>
+                    <label class="block text-sm mb-1">Clinic</label>
+                    <input type="text" name="clinic" maxlength="120" class="form-input" value="@Model.Clinic" />
+                </div>
+                <div>
+                    <label class="block text-sm mb-1">Phone</label>
+                    <input type="text" name="phone" maxlength="12" class="form-input" value="@Model.Phone"
+                           pattern="(0[0-9]{9}|\+94[0-9]{9}|94[0-9]{9})"
+                           title="10 digits starting 0, or +94 followed by 9 digits, or 94 followed by 9 digits" />
+                </div>
+                <div class="flex items-center gap-2 mt-6">
+                    <input type="checkbox" name="isActive" value="true" class="form-checkbox" checked="@(Model.IsActive ? "checked" : null)" />
+                    <label class="text-sm">Active provider</label>
+                </div>
+            </div>
+
+            <div class="mt-6 flex gap-2">
+                <button type="submit" class="btn bg-primary text-white">Save</button>
+                <a class="btn bg-light text-gray-800" href="@Url.Action("Index", "Providers")">Cancel</a>
+            </div>
+        }
+    </div>
+</div>

@@ -1,0 +1,22 @@
+﻿@{
+    ViewBag.Title = "Dashboard";
+    ViewBag.Subtitle = "Menu";
+}
+
+@section styles {
+    <!-- Jsvectormap plugin css -->
+    <link href="@Url.Content("~/assets/libs/jsvectormap/css/jsvectormap.min.css")" rel="stylesheet" type="text/css">
+}
+
+<!-- >>> PASTE dist\index.html lines 483 to 822 HERE <<< -->
+
+@section scripts {
+    <!-- Apexcharts js -->
+    <script src="@Url.Content("~/assets/libs/apexcharts/apexcharts.min.js")"></script>
+
+    <!-- Vector Map Js -->
+    <script src="@Url.Content("~/assets/libs/jsvectormap/js/jsvectormap.min.js")"></script>
+
+    <!-- Dashboard Project Page js -->
+    <script src="@Url.Content("~/assets/js/pages/dashboard.js")"></script>
+}

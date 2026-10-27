@@ -1,0 +1,52 @@
+@{
+    var active = ViewBag.ActiveAssignment as coursework_2.Models.TrainerClient;
+    bool pending = ViewBag.Pending != null && (bool)ViewBag.Pending;
+}
+
+@if (TempData["Success"] != null)
+{
+    <div class="mb-4 rounded-md bg-success px-4 py-3 text-sm text-white">@TempData["Success"]</div>
+}
+@if (TempData["Error"] != null)
+{
+    <div class="mb-4 rounded-md bg-danger px-4 py-3 text-sm text-white">@TempData["Error"]</div>
+}
+
+<div class="card">
+    <div class="card-header"><h4 class="card-title">Request a Trainer</h4></div>
+    <div class="card-body">
+        @if (active != null)
+        {
+            <p class="text-default-700">
+                You already have an assigned trainer:
+                <strong>@(active.Trainer != null ? active.Trainer.FullName : "-")</strong>.
+            </p>
+            <a class="btn bg-light text-gray-800 mt-4" href="@Url.Action("Index", "Dashboard")">Back to dashboard</a>
+        }
+        else if (pending)
+        {
+            <p class="text-default-700">
+                Your request for a trainer has been sent and is pending review by the administrator.
+            </p>
+            <a class="btn bg-light text-gray-800 mt-4" href="@Url.Action("Index", "Dashboard")">Back to dashboard</a>
+        }
+        else
+        {
+            <p class="text-default-700 mb-4">
+                You do not currently have an assigned trainer. Submit a request and an administrator will assign one for you.
+            </p>
+            using (Html.BeginForm("RequestTrainer", "TrainerRequests", FormMethod.Post))
+            {
+                @Html.AntiForgeryToken()
+                <div>
+                    <label class="block text-sm mb-1">Message (optional)</label>
+                    <textarea name="message" rows="4" maxlength="500" class="form-input" placeholder="Tell the administrator about your goals or preferred coaching style."></textarea>
+                </div>
+                <div class="mt-6 flex gap-2">
+                    <button type="submit" class="btn bg-primary text-white">Request trainer</button>
+                    <a class="btn bg-light text-gray-800" href="@Url.Action("Index", "Dashboard")">Cancel</a>
+                </div>
+            }
+        }
+    </div>
+</div>

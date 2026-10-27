@@ -1,0 +1,204 @@
+﻿@using System.Collections.Generic
+@using coursework_2.Models
+@{
+    var audits = ViewBag.RecentAudits as List<AuditLog>;
+    var upcoming = ViewBag.Upcoming as List<Appointment>;
+    var assignments = ViewBag.RecentAssignments as List<TrainerClient>;
+}
+
+<div class="grid lg:grid-cols-4 md:grid-cols-2 gap-6 mb-6">
+    <div class="card">
+        <div class="card-body">
+            <div class="flex justify-between items-center">
+                <div>
+                    <p class="text-default-500 text-sm mb-1">Total Users</p>
+                    <h4 class="text-xl font-semibold text-default-900">@ViewBag.TotalUsers</h4>
+                    <p class="text-default-500 text-sm mt-1">@ViewBag.TotalClients clients / @ViewBag.TotalTrainers trainers</p>
+                </div>
+                <div class="rounded-lg flex justify-center items-center size-16 bg-primary/10 text-primary">
+                    <span class="material-symbols-rounded text-4xl">group</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+            <div class="flex justify-between items-center">
+                <div>
+                    <p class="text-default-500 text-sm mb-1">Appointments Today</p>
+                    <h4 class="text-xl font-semibold text-default-900">@ViewBag.TodayAppointments</h4>
+                    <p class="text-default-500 text-sm mt-1">@ViewBag.PendingAppointments pending approval</p>
+                </div>
+                <div class="rounded-lg flex justify-center items-center size-16 bg-info/10 text-info">
+                    <span class="material-symbols-rounded text-4xl">calendar_month</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+            <div class="flex justify-between items-center">
+                <div>
+                    <p class="text-default-500 text-sm mb-1">Active Workout Plans</p>
+                    <h4 class="text-xl font-semibold text-default-900">@ViewBag.ActivePlans</h4>
+                </div>
+                <div class="rounded-lg flex justify-center items-center size-16 bg-success/10 text-success">
+                    <span class="material-symbols-rounded text-4xl">assignment</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+            <div class="flex justify-between items-center">
+                <div>
+                    <p class="text-default-500 text-sm mb-1">Users by Role</p>
+                    <div id="role-chart"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+<div class="grid lg:grid-cols-2 gap-6 mb-6">
+    <div class="card">
+        <div class="card-header flex justify-between items-center">
+            <h4 class="card-title">Trainer Assignments</h4>
+            <a href="@Url.Action("Index", "Assignments")" class="btn btn-sm bg-light text-gray-800">Manage</a>
+        </div>
+        <div class="card-body">
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <p class="text-default-500 text-sm mb-1">Active assignments</p>
+                    <h4 class="text-xl font-semibold text-default-900">@ViewBag.ActiveAssignments</h4>
+                </div>
+                <div>
+                    <p class="text-default-500 text-sm mb-1">Unassigned clients</p>
+                    <h4 class="text-xl font-semibold text-default-900">@ViewBag.UnassignedClients</h4>
+                </div>
+            </div>
+            <p class="text-default-500 text-sm mt-3">@ViewBag.TotalAssignments total assignments on record.</p>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header"><h4 class="card-title">Recent Assignments</h4></div>
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-6 py-3 text-start text-sm text-default-500">Trainer</th>
+                        <th class="px-6 py-3 text-start text-sm text-default-500">Client</th>
+                        <th class="px-6 py-3 text-start text-sm text-default-500">Assigned</th>
+                        <th class="px-6 py-3 text-start text-sm text-default-500">Status</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    @if (assignments == null || assignments.Count == 0)
+                    {
+                        <tr><td colspan="4" class="px-6 py-4 text-sm text-default-500">No assignments yet.</td></tr>
+                    }
+                    else
+                    {
+                        foreach (var a in assignments)
+                        {
+                            <tr>
+                                <td class="px-6 py-3 text-sm">@(a.Trainer != null ? a.Trainer.FullName : "-")</td>
+                                <td class="px-6 py-3 text-sm">@(a.Client != null ? a.Client.FullName : "-")</td>
+                                <td class="px-6 py-3 text-sm">@a.AssignedAt.ToLocalTime().ToString("dd MMM yyyy")</td>
+                                <td class="px-6 py-3 text-sm">
+                                    <span class="inline-block px-2 py-1 rounded-md text-xs @(a.Status == "Active" ? "bg-success" : "bg-gray-500") text-white">@a.Status</span>
+                                </td>
+                            </tr>
+                        }
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div class="grid xl:grid-cols-3 gap-6">
+    <div class="xl:col-span-2 card">
+        <div class="card-header flex justify-between items-center">
+            <h4 class="card-title">Recent Activity</h4>
+            <a href="@Url.Action("Index", "AuditLogs")" class="btn btn-sm bg-light text-gray-800">Full log</a>
+        </div>
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-6 py-3 text-start text-sm text-default-500">Time</th>
+                        <th class="px-6 py-3 text-start text-sm text-default-500">User</th>
+                        <th class="px-6 py-3 text-start text-sm text-default-500">Action</th>
+                        <th class="px-6 py-3 text-start text-sm text-default-500">Details</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    @if (audits == null || audits.Count == 0)
+                    {
+                        <tr><td colspan="4" class="px-6 py-4 text-sm text-default-500">No activity recorded.</td></tr>
+                    }
+                    else
+                    {
+                        foreach (var a in audits)
+                        {
+                            <tr>
+                                <td class="px-6 py-3 text-sm">@a.CreatedAt.ToLocalTime().ToString("dd MMM HH:mm")</td>
+                                <td class="px-6 py-3 text-sm">@(a.User != null ? a.User.Email : "system")</td>
+                                <td class="px-6 py-3 text-sm text-default-800">@a.Action</td>
+                                <td class="px-6 py-3 text-sm">@a.EntityName</td>
+                            </tr>
+                        }
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <h4 class="card-title">Upcoming Appointments</h4>
+        </div>
+        <div class="card-body">
+            @if (upcoming == null || upcoming.Count == 0)
+            {
+                <p class="text-default-500 text-sm">Nothing scheduled.</p>
+            }
+            else
+            {
+                <ul class="divide-y divide-gray-200">
+                    @foreach (var a in upcoming)
+                    {
+                        <li class="py-3">
+                            <p class="text-sm font-medium text-default-800">@(a.Client != null ? a.Client.FullName : "Client")</p>
+                            <p class="text-sm text-default-500">@(a.Trainer != null ? "with " + a.Trainer.FullName : "no trainer")</p>
+                            <p class="text-sm text-default-500">@a.StartTime.ToString("dd MMM, h:mm tt")</p>
+                        </li>
+                    }
+                </ul>
+            }
+        </div>
+    </div>
+</div>
+
+@section scripts {
+    <script>
+        (function () {
+            var labels = "@ViewBag.RoleLabels".split(",");
+            var counts = "@ViewBag.RoleCounts".split(",").map(Number);
+
+            new ApexCharts(document.querySelector("#role-chart"), {
+                chart: { type: "donut", height: 150, toolbar: { show: false } },
+                series: counts,
+                labels: labels,
+                legend: { show: false },
+                dataLabels: { enabled: false },
+                colors: ["#8b5cf6", "#22c55e", "#0ea5e9"]
+            }).render();
+        })();
+    </script>
+}

@@ -1,0 +1,145 @@
+@using coursework_2.Models
+@model LandingSectionItem
+@{
+    var parentSection = ViewBag.Section as LandingSection;
+    string titleLabel = "Title";
+    string textLabel = "Text";
+
+    if (parentSection != null)
+    {
+        switch (parentSection.SectionType)
+        {
+            case "FAQ":
+                titleLabel = "Question";
+                textLabel = "Answer";
+                break;
+            case "Testimonials":
+                titleLabel = "Name";
+                textLabel = "Quote";
+                break;
+            case "Stats":
+                titleLabel = "Value";
+                textLabel = "Label";
+                break;
+            case "Features":
+                titleLabel = "Title";
+                textLabel = "Description";
+                break;
+        }
+    }
+}
+
+@if (ViewBag.Error != null)
+{
+    <div class="mb-4 rounded-md bg-danger px-4 py-3 text-sm text-white">@ViewBag.Error</div>
+}
+
+@if (parentSection == null)
+{
+    <div class="card">
+        <div class="card-body">
+            <p class="text-danger mb-4">The parent section could not be found.</p>
+            <a href="@Url.Action("Index", "LandingAdmin")" class="btn bg-light text-gray-800">Back to sections</a>
+        </div>
+    </div>
+}
+else
+{
+    using (Html.BeginForm("ItemForm", "LandingAdmin", FormMethod.Post, new { enctype = "multipart/form-data" }))
+    {
+        @Html.AntiForgeryToken()
+        <input type="hidden" name="sectionId" value="@parentSection.SectionId" />
+        if (Model.ItemId > 0)
+        {
+            <input type="hidden" name="id" value="@Model.ItemId" />
+        }
+
+        <div class="grid lg:grid-cols-3 gap-6">
+            <div class="lg:col-span-2">
+                <div class="card">
+                    <div class="card-header">
+                        <h4 class="card-title">@parentSection.SectionType item</h4>
+                    </div>
+                    <div class="card-body">
+                        <div class="grid md:grid-cols-2 gap-5">
+                            <div class="md:col-span-2">
+                                <label class="text-default-800 text-sm font-medium inline-block mb-2" for="title">@titleLabel</label>
+                                <input id="title" name="title" class="form-input" required maxlength="160"
+                                       value="@Model.Title" />
+                            </div>
+                            <div class="md:col-span-2">
+                                <label class="text-default-800 text-sm font-medium inline-block mb-2" for="text">@textLabel</label>
+                                <textarea id="text" name="text" class="form-input" rows="5" maxlength="1200">@Model.Text</textarea>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card mt-6">
+                    <div class="card-header">
+                        <h4 class="card-title">Optional link</h4>
+                    </div>
+                    <div class="card-body">
+                        <div class="grid md:grid-cols-2 gap-5">
+                            <div>
+                                <label class="text-default-800 text-sm font-medium inline-block mb-2" for="linkText">Link text</label>
+                                <input id="linkText" name="linkText" class="form-input" maxlength="80"
+                                       value="@Model.LinkText" />
+                            </div>
+                            <div>
+                                <label class="text-default-800 text-sm font-medium inline-block mb-2" for="linkUrl">Link URL</label>
+                                <input id="linkUrl" name="linkUrl" class="form-input" maxlength="300"
+                                       placeholder="/Account/Register" value="@Model.LinkUrl" />
+                                <p class="text-default-500 text-xs mt-1">Use a relative path, #anchor, or an http/https link.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card mt-6">
+                    <div class="card-header">
+                        <h4 class="card-title">Image</h4>
+                    </div>
+                    <div class="card-body">
+                        <label class="text-default-800 text-sm font-medium inline-block mb-2" for="image">Item image</label>
+                        <input id="image" name="image" type="file" class="form-input" accept=".png,.jpg,.jpeg,.gif,.webp" />
+                        <p class="text-default-500 text-xs mt-1">PNG, JPG, GIF or WEBP, max 3 MB.</p>
+
+                        @if (!string.IsNullOrEmpty(Model.ImagePath))
+                        {
+                            <div class="mt-5">
+                                <p class="text-default-500 text-sm mb-2">Current image</p>
+                                <img src="@Url.Content(Model.ImagePath)" alt="@Model.Title" style="max-height:180px;max-width:100%;" class="rounded-md border border-default-200 mb-2">
+                                <label class="flex items-center gap-2 text-sm text-default-700">
+                                    <input type="checkbox" name="removeImage" value="true" />
+                                    Remove current image
+                                </label>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+
+            <div>
+                <div class="card">
+                    <div class="card-header">
+                        <h4 class="card-title">Placement</h4>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-5">
+                            <label class="text-default-800 text-sm font-medium inline-block mb-2" for="sortOrder">Sort order</label>
+                            <input id="sortOrder" name="sortOrder" type="number" min="1" class="form-input" value="@Model.SortOrder" required />
+                        </div>
+                        <p class="text-default-500 text-sm mb-0">
+                            Items are shown in ascending sort order inside the <strong>@parentSection.Heading</strong> parentSection.
+                        </p>
+                    </div>
+                    <div class="card-footer flex flex-wrap items-center gap-2">
+                        <button type="submit" class="btn bg-primary text-white">Save item</button>
+                        <a href="@Url.Action("Items", "LandingAdmin", new { id = parentSection.SectionId })" class="btn bg-light text-gray-800">Cancel</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+}

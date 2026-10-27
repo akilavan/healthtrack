@@ -1,0 +1,243 @@
+﻿@using System
+@{
+    var controller = (ViewContext.RouteData.Values["controller"] ?? "").ToString().ToLower();
+    var role = User.IsInRole("Admin") ? "Admin" : (User.IsInRole("Trainer") ? "Trainer" : "Client");
+
+    Func<string, string> on = c =>
+        controller == c.ToLower() ? "active" : "";
+    int unread = ViewBag.UnreadNotifications != null ? (int)ViewBag.UnreadNotifications : 0;
+    var appSettings = coursework_2.Models.SettingsService.Current;
+    var logoUrl = string.IsNullOrEmpty(appSettings.LogoPath)
+        ? Url.Content("~/assets/images/logo-dark.png")
+        : Url.Content(appSettings.LogoPath);
+}
+
+<aside id="app-menu"
+       class="hs-overlay fixed inset-y-0 start-0 z-60 hidden w-sidenav min-w-sidenav bg-white border-e border-default-200 overflow-y-auto -translate-x-full transform transition-all duration-300 hs-overlay-open:translate-x-0 lg:bottom-0 lg:end-auto lg:z-30 lg:block lg:translate-x-0 rtl:translate-x-full rtl:hs-overlay-open:translate-x-0 rtl:lg:translate-x-0 print:hidden [--body-scroll:true] [--overlay-backdrop:true] lg:[--overlay-backdrop:false]">
+
+    <div class="sticky top-0 flex h-topbar items-center justify-center px-6 border-b border-default-200">
+        <a href="@Url.Action("Index", "Dashboard")">
+            <img src="@logoUrl" alt="@appSettings.CompanyName" class="flex h-20">
+        </a>
+    </div>
+
+    <div class="p-4" data-simplebar>
+        <ul class="admin-menu hs-accordion-group flex w-full flex-col gap-1.5">
+
+            <li class="menu-item">
+                <a class="group flex items-center gap-x-3.5 rounded-md px-3 py-2 text-sm font-medium text-default-700 transition-all hover:bg-default-900/5 @on("Dashboard")"
+                   href="@Url.Action("Index", "Dashboard")">
+                    <span class="material-symbols-rounded text-xl">space_dashboard</span>
+                    Dashboard
+                </a>
+            </li>
+
+            @if (role == "Client")
+            {
+                <li class="px-5 py-2 text-sm font-medium text-default-600">My Fitness</li>
+
+                <li class="menu-item">
+                    <a class="group flex items-center gap-x-3.5 rounded-md px-3 py-2 text-sm font-medium text-default-700 transition-all hover:bg-default-900/5 @on("Workouts")"
+                       href="@Url.Action("Index", "Workouts")">
+                        <span class="material-symbols-rounded text-xl">fitness_center</span>
+                        Workout Plan
+                    </a>
+                </li>
+
+                <li class="menu-item">
+                    <a class="group flex items-center gap-x-3.5 rounded-md px-3 py-2 text-sm font-medium text-default-700 transition-all hover:bg-default-900/5 @on("Diets")"
+                       href="@Url.Action("Index", "Diets")">
+                        <span class="material-symbols-rounded text-xl">restaurant</span>
+                        Diet Plan
+                    </a>
+                </li>
+
+                <li class="menu-item">
+                    <a class="group flex items-center gap-x-3.5 rounded-md px-3 py-2 text-sm font-medium text-default-700 transition-all hover:bg-default-900/5 @on("Appointments")"
+                       href="@Url.Action("Index", "Appointments")">
+                        <span class="material-symbols-rounded text-xl">calendar_month</span>
+                        Appointments
+                    </a>
+                </li>
+
+                <li class="menu-item">
+                    <a class="group flex items-center gap-x-3.5 rounded-md px-3 py-2 text-sm font-medium text-default-700 transition-all hover:bg-default-900/5 @on("Progress")"
+                       href="@Url.Action("Index", "Progress")">
+                        <span class="material-symbols-rounded text-xl">monitoring</span>
+                        Progress
+                    </a>
+                </li>
+
+                <li class="menu-item">
+                    <a class="group flex items-center gap-x-3.5 rounded-md px-3 py-2 text-sm font-medium text-default-700 transition-all hover:bg-default-900/5 @on("TrainerRequests")"
+                       href="@Url.Action("RequestTrainer", "TrainerRequests")">
+                        <span class="material-symbols-rounded text-xl">person_add</span>
+                        Request Trainer
+                    </a>
+                </li>
+
+                <li class="menu-item">
+                    <a class="group flex items-center gap-x-3.5 rounded-md px-3 py-2 text-sm font-medium text-default-700 transition-all hover:bg-default-900/5 @on("Feedback")"
+                       href="@Url.Action("Index", "Feedback")">
+                        <span class="material-symbols-rounded text-xl">reviews</span>
+                        Trainer Feedback
+                    </a>
+                </li>
+            }
+            else if (role == "Trainer")
+            {
+                <li class="px-5 py-2 text-sm font-medium text-default-600">Coaching</li>
+
+                <li class="menu-item">
+                    <a class="group flex items-center gap-x-3.5 rounded-md px-3 py-2 text-sm font-medium text-default-700 transition-all hover:bg-default-900/5 @on("Clients")"
+                       href="@Url.Action("Index", "Clients")">
+                        <span class="material-symbols-rounded text-xl">group</span>
+                        My Clients
+                    </a>
+                </li>
+
+                <li class="menu-item">
+                    <a class="group flex items-center gap-x-3.5 rounded-md px-3 py-2 text-sm font-medium text-default-700 transition-all hover:bg-default-900/5 @on("Workouts")"
+                       href="@Url.Action("Index", "Workouts")">
+                        <span class="material-symbols-rounded text-xl">fitness_center</span>
+                        Workout Plans
+                    </a>
+                </li>
+
+                <li class="menu-item">
+                    <a class="group flex items-center gap-x-3.5 rounded-md px-3 py-2 text-sm font-medium text-default-700 transition-all hover:bg-default-900/5 @on("Diets")"
+                       href="@Url.Action("Index", "Diets")">
+                        <span class="material-symbols-rounded text-xl">restaurant</span>
+                        Diet Plans
+                    </a>
+                </li>
+
+                <li class="menu-item">
+                    <a class="group flex items-center gap-x-3.5 rounded-md px-3 py-2 text-sm font-medium text-default-700 transition-all hover:bg-default-900/5 @on("Appointments")"
+                       href="@Url.Action("Index", "Appointments")">
+                        <span class="material-symbols-rounded text-xl">calendar_month</span>
+                        Appointments
+                    </a>
+                </li>
+
+                <li class="menu-item">
+                    <a class="group flex items-center gap-x-3.5 rounded-md px-3 py-2 text-sm font-medium text-default-700 transition-all hover:bg-default-900/5 @on("Exercises")"
+                       href="@Url.Action("Index", "Exercises")">
+                        <span class="material-symbols-rounded text-xl">exercise</span>
+                        Exercise Library
+                    </a>
+                </li>
+
+                <li class="menu-item">
+                    <a class="group flex items-center gap-x-3.5 rounded-md px-3 py-2 text-sm font-medium text-default-700 transition-all hover:bg-default-900/5 @on("Feedback")"
+                       href="@Url.Action("Index", "Feedback")">
+                        <span class="material-symbols-rounded text-xl">reviews</span>
+                        Give Feedback
+                    </a>
+                </li>
+                <li class="menu-item">
+                    <a class="group flex items-center gap-x-3.5 rounded-md px-3 py-2 text-sm font-medium text-default-700 transition-all hover:bg-default-900/5 @on("Reports")"
+                       href="@Url.Action("Index", "Reports")">
+                        <span class="material-symbols-rounded text-xl">bar_chart</span>
+                        My Reports
+                    </a>
+                </li>
+            }
+            else
+            {
+                <li class="px-5 py-2 text-sm font-medium text-default-600">Administration</li>
+
+                <li class="menu-item">
+                    <a class="group flex items-center gap-x-3.5 rounded-md px-3 py-2 text-sm font-medium text-default-700 transition-all hover:bg-default-900/5 @on("Users")"
+                       href="@Url.Action("Index", "Users")">
+                        <span class="material-symbols-rounded text-xl">manage_accounts</span>
+                        Users
+                    </a>
+                </li>
+
+                <li class="menu-item">
+                    <a class="group flex items-center gap-x-3.5 rounded-md px-3 py-2 text-sm font-medium text-default-700 transition-all hover:bg-default-900/5 @on("Assignments")"
+                       href="@Url.Action("Index", "Assignments")">
+                        <span class="material-symbols-rounded text-xl">assignment_ind</span>
+                        Trainer Assignments
+                    </a>
+                </li>
+                <li class="menu-item">
+                    <a class="group flex items-center gap-x-3.5 rounded-md px-3 py-2 text-sm font-medium text-default-700 transition-all hover:bg-default-900/5 @on("Providers")"
+                       href="@Url.Action("Index", "Providers")">
+                        <span class="material-symbols-rounded text-xl">medical_services</span>
+                        Healthcare Providers
+                    </a>
+                </li>
+
+                <li class="menu-item">
+                    <a class="group flex items-center gap-x-3.5 rounded-md px-3 py-2 text-sm font-medium text-default-700 transition-all hover:bg-default-900/5 @on("Appointments")"
+                       href="@Url.Action("Index", "Appointments")">
+                        <span class="material-symbols-rounded text-xl">calendar_month</span>
+                        Appointments
+                    </a>
+                </li>
+
+                <li class="menu-item">
+                    <a class="group flex items-center gap-x-3.5 rounded-md px-3 py-2 text-sm font-medium text-default-700 transition-all hover:bg-default-900/5 @on("Reports")"
+                       href="@Url.Action("Index", "Reports")">
+                        <span class="material-symbols-rounded text-xl">bar_chart</span>
+                        Reports
+                    </a>
+                </li>
+
+                <li class="menu-item">
+                    <a class="group flex items-center gap-x-3.5 rounded-md px-3 py-2 text-sm font-medium text-default-700 transition-all hover:bg-default-900/5 @on("AuditLogs")"
+                       href="@Url.Action("Index", "AuditLogs")">
+                        <span class="material-symbols-rounded text-xl">receipt_long</span>
+                        Audit Logs
+                    </a>
+                </li>
+                <li class="menu-item">
+                    <a class="group flex items-center gap-x-3.5 rounded-md px-3 py-2 text-sm font-medium text-default-700 transition-all hover:bg-default-900/5 @on("LandingAdmin")"
+                       href="@Url.Action("Index", "LandingAdmin")">
+                        <span class="material-symbols-rounded text-xl">web</span>
+                        Landing Page
+                    </a>
+                </li>
+                <li class="menu-item">
+                    <a class="group flex items-center gap-x-3.5 rounded-md px-3 py-2 text-sm font-medium text-default-700 transition-all hover:bg-default-900/5 @on("Settings")"
+                       href="@Url.Action("Index", "Settings")">
+                        <span class="material-symbols-rounded text-xl">settings</span>
+                        Settings
+                    </a>
+                </li>
+            }
+
+            <li class="px-5 py-2 text-sm font-medium text-default-600">Account</li>
+
+            <li class="menu-item">
+                <a class="group flex items-center gap-x-3.5 rounded-md px-3 py-2 text-sm font-medium text-default-700 transition-all hover:bg-default-900/5 @on("Notifications")"
+                   href="@Url.Action("Index", "Notifications")">
+                    <span class="material-symbols-rounded text-xl">notifications</span>
+                    Notifications
+                    @if (unread > 0)
+                    {
+                        <span class="ms-auto inline-flex items-center justify-center size-5 rounded-full bg-danger text-white text-xs">@unread</span>
+                    }
+                </a>
+            </li>
+
+            <li class="menu-item">
+                <a class="group flex items-center gap-x-3.5 rounded-md px-3 py-2 text-sm font-medium text-default-700 transition-all hover:bg-default-900/5 @on("Profile")"
+                   href="@Url.Action("Index", "Profile")">
+                    <span class="material-symbols-rounded text-xl">person</span>
+                    My Profile
+                </a>
+            </li>
+
+            <li class="menu-item">
+                <a class="group flex items-center gap-x-3.5 rounded-md px-3 py-2 text-sm font-medium text-danger transition-all hover:bg-danger/10"
+                   href="@Url.Action("Logout", "Account")">
+                    <span class="material-symbols-rounded text-xl">logout</span>
+                    Log Out
+                </a>
+            </li>
+        </ul>
+    </div>
+</aside>

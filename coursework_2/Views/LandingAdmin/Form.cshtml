@@ -1,0 +1,152 @@
+@using coursework_2.Models
+@model LandingSection
+@{
+    var sectionTypes = ViewBag.SectionTypes as string[] ?? LandingSection.Types;
+    var backgroundStyles = ViewBag.BackgroundStyles as string[] ?? LandingSection.BackgroundStyles;
+}
+
+@if (ViewBag.Error != null)
+{
+    <div class="mb-4 rounded-md bg-danger px-4 py-3 text-sm text-white">@ViewBag.Error</div>
+}
+
+@using (Html.BeginForm("Form", "LandingAdmin", FormMethod.Post, new { enctype = "multipart/form-data" }))
+{
+    @Html.AntiForgeryToken()
+    if (Model.SectionId > 0)
+    {
+        <input type="hidden" name="id" value="@Model.SectionId" />
+    }
+
+    <div class="grid lg:grid-cols-3 gap-6">
+        <div class="lg:col-span-2">
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="card-title">Section content</h4>
+                </div>
+                <div class="card-body">
+                    <div class="grid md:grid-cols-2 gap-5">
+                        <div>
+                            <label class="text-default-800 text-sm font-medium inline-block mb-2" for="sectionType">Section type</label>
+                            <select id="sectionType" name="sectionType" class="form-input" required>
+                                @foreach (var type in sectionTypes)
+                                {
+                                    <option value="@type" selected="@(Model.SectionType == type ? "selected" : null)">@type</option>
+                                }
+                            </select>
+                            <p class="text-default-500 text-xs mt-1">Features, Stats, Testimonials and FAQ support repeatable items.</p>
+                        </div>
+                        <div>
+                            <label class="text-default-800 text-sm font-medium inline-block mb-2" for="backgroundStyle">Background style</label>
+                            <select id="backgroundStyle" name="backgroundStyle" class="form-input" required>
+                                @foreach (var style in backgroundStyles)
+                                {
+                                    <option value="@style" selected="@(Model.BackgroundStyle == style ? "selected" : null)">@style</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="md:col-span-2">
+                            <label class="text-default-800 text-sm font-medium inline-block mb-2" for="heading">Heading</label>
+                            <input id="heading" name="heading" class="form-input" required maxlength="160"
+                                   value="@Model.Heading" />
+                        </div>
+                        <div class="md:col-span-2">
+                            <label class="text-default-800 text-sm font-medium inline-block mb-2" for="subheading">Subheading</label>
+                            <input id="subheading" name="subheading" class="form-input" maxlength="300"
+                                   value="@Model.Subheading" />
+                        </div>
+                        <div class="md:col-span-2">
+                            <label class="text-default-800 text-sm font-medium inline-block mb-2" for="body">Body text</label>
+                            <textarea id="body" name="body" class="form-input" rows="5" maxlength="2000">@Model.Body</textarea>
+                            <p class="text-default-500 text-xs mt-1">Used for supporting copy on Hero, About and CTA sections.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card mt-6">
+                <div class="card-header">
+                    <h4 class="card-title">Call to action</h4>
+                </div>
+                <div class="card-body">
+                    <div class="grid md:grid-cols-2 gap-5">
+                        <div>
+                            <label class="text-default-800 text-sm font-medium inline-block mb-2" for="buttonText">Button text</label>
+                            <input id="buttonText" name="buttonText" class="form-input" maxlength="80"
+                                   value="@Model.ButtonText" />
+                        </div>
+                        <div>
+                            <label class="text-default-800 text-sm font-medium inline-block mb-2" for="buttonUrl">Button URL</label>
+                            <input id="buttonUrl" name="buttonUrl" class="form-input" maxlength="300"
+                                   placeholder="/Account/Register" value="@Model.ButtonUrl" />
+                            <p class="text-default-500 text-xs mt-1">Use a relative path, #anchor, or an http/https link.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card mt-6">
+                <div class="card-header">
+                    <h4 class="card-title">Image</h4>
+                </div>
+                <div class="card-body">
+                    <label class="text-default-800 text-sm font-medium inline-block mb-2" for="image">Section image</label>
+                    <input id="image" name="image" type="file" class="form-input" accept=".png,.jpg,.jpeg,.gif,.webp" />
+                    <p class="text-default-500 text-xs mt-1">PNG, JPG, GIF or WEBP, max 3 MB. Used on Hero and About sections.</p>
+
+                    @if (!string.IsNullOrEmpty(Model.ImagePath))
+                    {
+                        <div class="mt-5">
+                            <p class="text-default-500 text-sm mb-2">Current image</p>
+                            <img src="@Url.Content(Model.ImagePath)" alt="Section image" style="max-height:180px;max-width:100%;" class="rounded-md border border-default-200 mb-2">
+                            <label class="flex items-center gap-2 text-sm text-default-700">
+                                <input type="checkbox" name="removeImage" value="true" />
+                                Remove current image
+                            </label>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <div>
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="card-title">Publishing</h4>
+                </div>
+                <div class="card-body">
+                    <div class="mb-5">
+                        <label class="text-default-800 text-sm font-medium inline-block mb-2" for="sortOrder">Sort order</label>
+                        <input id="sortOrder" name="sortOrder" type="number" min="1" class="form-input" value="@Model.SortOrder" required />
+                    </div>
+                    <label class="flex items-start gap-2 text-sm text-default-800">
+                        <input type="checkbox" name="isPublished" value="true" class="mt-1" checked="@(Model.IsPublished ? "checked" : null)" />
+                        <span>
+                            Published
+                            <span class="block text-default-500 text-xs">Hidden sections stay in the admin list but are not shown on the public page.</span>
+                        </span>
+                    </label>
+
+                    @if (LandingSection.SupportsItems(Model.SectionType))
+                    {
+                        <div class="mt-5 rounded-md bg-default-50 p-3 text-sm text-default-600">
+                            @if (Model.SectionId > 0)
+                            {
+                                <span>This section has repeatable items.</span>
+                                <a href="@Url.Action("Items", "LandingAdmin", new { id = Model.SectionId })" class="text-primary block mt-1">Manage items</a>
+                            }
+                            else
+                            {
+                                <span>Save the section first, then add its items.</span>
+                            }
+                        </div>
+                    }
+                </div>
+                <div class="card-footer flex flex-wrap items-center gap-2">
+                    <button type="submit" class="btn bg-primary text-white">Save section</button>
+                    <a href="@Url.Action("Index", "LandingAdmin")" class="btn bg-light text-gray-800">Cancel</a>
+                </div>
+            </div>
+        </div>
+    </div>
+}

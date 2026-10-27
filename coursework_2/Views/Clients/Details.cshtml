@@ -1,0 +1,111 @@
+﻿@using coursework_2.Models
+@model User
+@{
+    var metric = ViewBag.LatestMetric as HealthMetric;
+    var plans = ViewBag.Plans as List<WorkoutPlan>;
+    var diets = ViewBag.Diets as List<DietPlan>;
+    var appts = ViewBag.Appointments as List<Appointment>;
+    var trainer = ViewBag.Trainer as User;
+}
+
+<div class="grid lg:grid-cols-3 gap-6">
+    <div class="card">
+        <div class="card-header"><h4 class="card-title">Client</h4></div>
+        <div class="card-body text-sm">
+            <p class="text-default-900 font-medium mb-1">@Model.FullName</p>
+            <p class="text-default-500">@Model.Email</p>
+            <p class="text-default-500">@Model.Phone</p>
+            <p class="text-default-500 mt-2">Trainer: @(trainer != null ? trainer.FullName : "-")</p>
+            <p class="text-default-500">Goal: @(Model.ClientProfile != null ? Model.ClientProfile.FitnessGoal : "-")</p>
+            <p class="text-default-500">Activity: @(Model.ClientProfile != null ? Model.ClientProfile.ActivityLevel : "-")</p>
+            @if (Model.ClientProfile != null && !string.IsNullOrEmpty(Model.ClientProfile.MedicalNotes))
+            {
+                <p class="text-default-500 mt-2">Notes: @Model.ClientProfile.MedicalNotes</p>
+            }
+            <a class="btn btn-sm bg-primary text-white mt-4" href="@Url.Action("Client", "Progress", new { id = Model.UserId })">View progress</a>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header"><h4 class="card-title">Latest Measurement</h4></div>
+        <div class="card-body text-sm">
+            @if (metric == null)
+            {
+                <p class="text-default-500">No measurements.</p>
+            }
+            else
+            {
+                <p class="text-default-500">@metric.MeasuredAt.ToString("dd MMM yyyy")</p>
+                <p class="text-default-900 text-lg font-semibold">@metric.WeightKg.ToString("0.0") kg</p>
+                <p class="text-default-500">BMI: @(metric.BMI.HasValue ? metric.BMI.Value.ToString("0.0") : "-")</p>
+                <p class="text-default-500">Body fat: @(metric.BodyFatPct.HasValue ? metric.BodyFatPct.Value.ToString("0.0") + "%" : "-")</p>
+            }
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header"><h4 class="card-title">Plans</h4></div>
+        <div class="card-body text-sm">
+            <p class="text-default-500 mb-1">Workout plans</p>
+            @if (plans == null || plans.Count == 0)
+            {
+                <p class="text-default-500">None</p>
+            }
+            else
+            {
+                <ul class="mb-3">
+                    @foreach (var p in plans)
+                    {
+                        <li><a class="text-primary" href="@Url.Action("Details", "Workouts", new { id = p.PlanId })">@p.Title</a> - @p.Status</li>
+                    }
+                </ul>
+            }
+            <p class="text-default-500 mb-1">Diet plans</p>
+            @if (diets == null || diets.Count == 0)
+            {
+                <p class="text-default-500">None</p>
+            }
+            else
+            {
+                <ul>
+                    @foreach (var d in diets)
+                    {
+                        <li><a class="text-primary" href="@Url.Action("Details", "Diets", new { id = d.DietPlanId })">@d.Title</a> - @d.Status</li>
+                    }
+                </ul>
+            }
+        </div>
+    </div>
+</div>
+
+<div class="card mt-6">
+    <div class="card-header"><h4 class="card-title">Recent Appointments</h4></div>
+    <div class="overflow-x-auto">
+        <table class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-gray-50">
+                <tr>
+                    <th class="px-6 py-3 text-start text-sm text-default-500">When</th>
+                    <th class="px-6 py-3 text-start text-sm text-default-500">Purpose</th>
+                    <th class="px-6 py-3 text-start text-sm text-default-500">Status</th>
+                </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-200">
+                @if (appts == null || appts.Count == 0)
+                {
+                    <tr><td colspan="3" class="px-6 py-4 text-sm text-default-500">No appointments.</td></tr>
+                }
+                else
+                {
+                    foreach (var a in appts)
+                    {
+                        <tr>
+                            <td class="px-6 py-3 text-sm">@a.StartTime.ToString("dd MMM yyyy HH:mm")</td>
+                            <td class="px-6 py-3 text-sm">@a.Purpose</td>
+                            <td class="px-6 py-3 text-sm">@a.Status</td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

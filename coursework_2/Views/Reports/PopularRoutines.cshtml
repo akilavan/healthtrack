@@ -1,0 +1,164 @@
+﻿@using System.Collections.Generic
+@using coursework_2.Models
+@{
+    var usage = ViewBag.Usage as List<ExerciseUsageRow> ?? new List<ExerciseUsageRow>();
+    var plans = ViewBag.Plans as List<PlanUsageRow> ?? new List<PlanUsageRow>();
+    var categories = ViewBag.Categories as List<NamedCount> ?? new List<NamedCount>();
+}
+
+@Html.Partial("_ReportNav")
+
+<form method="get" action="@Url.Action("PopularRoutines", "Reports")" class="flex flex-wrap gap-2 mb-6">
+    <input type="date" name="from" value="@ViewBag.FromIso" class="form-input w-full md:w-44" />
+    <input type="date" name="to" value="@ViewBag.ToIso" class="form-input w-full md:w-44" />
+    <button type="submit" class="btn bg-primary text-white">Generate</button>
+    <a class="btn bg-light text-gray-800" href="@Url.Action("PopularRoutinesCsv", "Reports", new { from = ViewBag.FromIso, to = ViewBag.ToIso })">Export CSV</a>
+</form>
+
+<div class="grid lg:grid-cols-4 md:grid-cols-2 gap-6 mb-6">
+    <div class="card">
+        <div class="card-body">
+            <p class="text-default-500 text-sm mb-1">Exercise Logs</p>
+            <h4 class="text-xl font-semibold text-default-900">@ViewBag.TotalLogs</h4>
+        </div>
+    </div>
+    <div class="card">
+        <div class="card-body">
+            <p class="text-default-500 text-sm mb-1">Different Exercises</p>
+            <h4 class="text-xl font-semibold text-default-900">@ViewBag.DistinctExercises</h4>
+        </div>
+    </div>
+    <div class="card">
+        <div class="card-body">
+            <p class="text-default-500 text-sm mb-1">Top Category</p>
+            <h4 class="text-xl font-semibold text-default-900">@ViewBag.TopCategory</h4>
+        </div>
+    </div>
+    <div class="card">
+        <div class="card-body">
+            <p class="text-default-500 text-sm mb-1">Plans Used</p>
+            <h4 class="text-xl font-semibold text-default-900">@ViewBag.PlansUsed</h4>
+        </div>
+    </div>
+</div>
+
+<div class="card mb-6">
+    <div class="card-header"><h4 class="card-title">Most Popular Exercises</h4></div>
+    <div class="card-body"><div id="routine-chart"></div></div>
+</div>
+
+<div class="grid lg:grid-cols-2 gap-6">
+    <div class="card">
+        <div class="card-header"><h4 class="card-title">Exercise Usage</h4></div>
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-6 py-3 text-start text-sm text-default-500">Exercise</th>
+                        <th class="px-6 py-3 text-start text-sm text-default-500">Category</th>
+                        <th class="px-6 py-3 text-start text-sm text-default-500">Logs</th>
+                        <th class="px-6 py-3 text-start text-sm text-default-500">Minutes</th>
+                        <th class="px-6 py-3 text-start text-sm text-default-500">Calories</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    @if (usage.Count == 0)
+                    {
+                        <tr><td colspan="5" class="px-6 py-4 text-sm text-default-500">No workouts logged in this period.</td></tr>
+                    }
+                    else
+                    {
+                        foreach (var u in usage)
+                        {
+                            <tr>
+                                <td class="px-6 py-3 text-sm text-default-800">@u.Name</td>
+                                <td class="px-6 py-3 text-sm">@u.Category</td>
+                                <td class="px-6 py-3 text-sm">@u.Logs</td>
+                                <td class="px-6 py-3 text-sm">@u.Minutes</td>
+                                <td class="px-6 py-3 text-sm">@u.Calories.ToString("0")</td>
+                            </tr>
+                        }
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div>
+        <div class="card mb-6">
+            <div class="card-header"><h4 class="card-title">By Category</h4></div>
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-6 py-3 text-start text-sm text-default-500">Category</th>
+                            <th class="px-6 py-3 text-start text-sm text-default-500">Logs</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        @if (categories.Count == 0)
+                        {
+                            <tr><td colspan="2" class="px-6 py-4 text-sm text-default-500">No data.</td></tr>
+                        }
+                        else
+                        {
+                            foreach (var c in categories)
+                            {
+                                <tr>
+                                    <td class="px-6 py-3 text-sm">@c.Name</td>
+                                    <td class="px-6 py-3 text-sm">@c.Count</td>
+                                </tr>
+                            }
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header"><h4 class="card-title">Most Used Plans</h4></div>
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-6 py-3 text-start text-sm text-default-500">Plan</th>
+                            <th class="px-6 py-3 text-start text-sm text-default-500">Times logged</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        @if (plans.Count == 0)
+                        {
+                            <tr><td colspan="2" class="px-6 py-4 text-sm text-default-500">No plan-based logs in this period.</td></tr>
+                        }
+                        else
+                        {
+                            foreach (var p in plans)
+                            {
+                                <tr>
+                                    <td class="px-6 py-3 text-sm">@p.Title</td>
+                                    <td class="px-6 py-3 text-sm">@p.Logs</td>
+                                </tr>
+                            }
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section scripts {
+    <script>
+        (function () {
+            new ApexCharts(document.querySelector("#routine-chart"), {
+                chart: { type: "bar", height: 320, toolbar: { show: false } },
+                series: [{ name: "Logs", data: "@ViewBag.ChartSeries".split(",").map(Number) }],
+                xaxis: { categories: "@ViewBag.ChartLabels".split(",") },
+                colors: ["#8b5cf6"],
+                plotOptions: { bar: { borderRadius: 4, horizontal: true } },
+                dataLabels: { enabled: false },
+                grid: { strokeDashArray: 4 }
+            }).render();
+        })();
+    </script>
+}

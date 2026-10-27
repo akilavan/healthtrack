@@ -1,0 +1,104 @@
+﻿@using System.Collections.Generic
+@using System.Linq
+@using coursework_2.Models
+@model List<TrainerFeedback>
+@{
+    bool isTrainer = User.IsInRole("Trainer");
+    var clients = ViewBag.Clients as List<User>;
+    var logs = ViewBag.Logs as List<WorkoutLog>;
+}
+
+@if (TempData["Success"] != null)
+{
+    <div class="mb-4 rounded-md bg-success px-4 py-3 text-sm text-white">@TempData["Success"]</div>
+}
+@if (TempData["Error"] != null)
+{
+    <div class="mb-4 rounded-md bg-danger px-4 py-3 text-sm text-white">@TempData["Error"]</div>
+}
+
+@if (isTrainer)
+{
+    <div class="card mb-6">
+        <div class="card-header"><h4 class="card-title">Give Feedback</h4></div>
+        <div class="card-body">
+            @using (Html.BeginForm("Create", "Feedback", FormMethod.Post))
+            {
+                @Html.AntiForgeryToken()
+                <div class="grid md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm mb-1">Client</label>
+                        <select name="clientId" class="form-input" required>
+                            @if (clients != null)
+                            {
+                                foreach (var c in clients)
+                                {
+                                    <option value="@c.UserId">@c.FullName</option>
+                                }
+                            }
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm mb-1">Related workout log (optional)</label>
+                        <select name="workoutLogId" class="form-input">
+                            <option value="">None</option>
+                            @if (logs != null)
+                            {
+                                foreach (var l in logs)
+                                {
+                                    <option value="@l.WorkoutLogId">@(l.Client != null ? l.Client.FullName : "Client") - @(l.Exercise != null ? l.Exercise.Name : "Exercise") (@l.LogDate.ToString("dd MMM"))</option>
+                                }
+                            }
+                        </select>
+                    </div>
+                    <div class="md:col-span-2">
+                        <label class="block text-sm mb-1">Comment</label>
+                        <textarea name="comment" maxlength="500" class="form-input" rows="3" required placeholder="At least 5 characters"></textarea>
+                    </div>
+                </div>
+                <button type="submit" class="btn bg-primary text-white mt-4">Send feedback</button>
+            }
+        </div>
+    </div>
+}
+
+<div class="card">
+    <div class="card-header"><h4 class="card-title">Feedback</h4></div>
+    <div class="card-body">
+        @if (Model == null || Model.Count == 0)
+        {
+            <p class="text-default-500 text-sm">No feedback yet.</p>
+        }
+        else
+        {
+            <ul class="divide-y divide-gray-200">
+                @foreach (var f in Model)
+                {
+                    <li class="py-4 flex justify-between items-start gap-4">
+                        <div>
+                            <p class="text-sm text-default-500">
+                                @(isTrainer
+                                    ? "To " + (f.Client != null ? f.Client.FullName : "client")
+                                    : "From " + (f.Trainer != null ? f.Trainer.FullName : "trainer"))
+                                - @f.CreatedAt.ToLocalTime().ToString("dd MMM yyyy HH:mm")
+                            </p>
+                            <p class="text-sm text-default-800 mt-1">@f.Comment</p>
+                            @if (f.WorkoutLog != null)
+                            {
+                                <p class="text-xs text-default-400 mt-1">Re: @(f.WorkoutLog.Exercise != null ? f.WorkoutLog.Exercise.Name : "workout") on @f.WorkoutLog.LogDate.ToString("dd MMM")</p>
+                            }
+                        </div>
+                        @if (isTrainer || User.IsInRole("Admin"))
+                        {
+                            using (Html.BeginForm("Delete", "Feedback", new { id = f.FeedbackId }, FormMethod.Post, new { onsubmit = "return confirm('Delete this feedback?');" }))
+                            {
+                                @Html.AntiForgeryToken()
+                                <button type="submit" class="btn btn-sm bg-danger text-white">Delete</button>
+                            }
+                        }
+                    </li>
+                }
+            </ul>
+        }
+    </div>
+</div>

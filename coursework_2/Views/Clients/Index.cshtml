@@ -1,0 +1,44 @@
+﻿@using coursework_2.Models
+@model List<User>
+
+<div class="card">
+    <div class="card-header"><h4 class="card-title">Clients</h4></div>
+    <div class="overflow-x-auto">
+        <table class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-gray-50">
+                <tr>
+                    <th class="px-6 py-3 text-start text-sm text-default-500">Name</th>
+                    <th class="px-6 py-3 text-start text-sm text-default-500">Email</th>
+                    <th class="px-6 py-3 text-start text-sm text-default-500">Phone</th>
+                    <th class="px-6 py-3 text-start text-sm text-default-500">Goal</th>
+                    <th class="px-6 py-3 text-start text-sm text-default-500">Status</th>
+                    <th class="px-6 py-3 text-end text-sm text-default-500"></th>
+                </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-200">
+                @if (Model == null || Model.Count == 0)
+                {
+                    <tr><td colspan="6" class="px-6 py-4 text-sm text-default-500">No clients yet. Create a plan to add one.</td></tr>
+                }
+                else
+                {
+                    foreach (var c in Model)
+                    {
+                        <tr>
+                            <td class="px-6 py-3 text-sm text-default-800">@c.FullName</td>
+                            <td class="px-6 py-3 text-sm">@c.Email</td>
+                            <td class="px-6 py-3 text-sm">@c.Phone</td>
+                            <td class="px-6 py-3 text-sm">@(c.ClientProfile != null ? c.ClientProfile.FitnessGoal : "-")</td>
+                            <td class="px-6 py-3 text-sm">
+                                <span class="inline-block px-2 py-1 rounded-md text-xs @(c.IsActive ? "bg-success" : "bg-gray-500") text-white">@(c.IsActive ? "Active" : "Inactive")</span>
+                            </td>
+                            <td class="px-6 py-3 text-sm text-end">
+                                <a class="btn btn-sm bg-light text-gray-800" href="@Url.Action("Details", "Clients", new { id = c.UserId })">View</a>
+                            </td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

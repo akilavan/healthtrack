@@ -1,0 +1,119 @@
+﻿@using System.Collections.Generic
+@using coursework_2.Models
+@{
+    var rows = ViewBag.Rows as List<EngagementRow> ?? new List<EngagementRow>();
+}
+
+@Html.Partial("_ReportNav")
+
+<form method="get" action="@Url.Action("Engagement", "Reports")" class="flex flex-wrap gap-2 mb-6">
+    <input type="date" name="from" value="@ViewBag.FromIso" class="form-input w-full md:w-44" />
+    <input type="date" name="to" value="@ViewBag.ToIso" class="form-input w-full md:w-44" />
+    <button type="submit" class="btn bg-primary text-white">Generate</button>
+    <a class="btn bg-light text-gray-800" href="@Url.Action("EngagementCsv", "Reports", new { from = ViewBag.FromIso, to = ViewBag.ToIso })">Export CSV</a>
+</form>
+
+<div class="grid lg:grid-cols-4 md:grid-cols-2 gap-6 mb-6">
+    <div class="card">
+        <div class="card-body">
+            <p class="text-default-500 text-sm mb-1">Clients</p>
+            <h4 class="text-xl font-semibold text-default-900">@ViewBag.TotalClients</h4>
+            <p class="text-default-500 text-sm mt-1">@ViewBag.ActiveClients active</p>
+        </div>
+    </div>
+    <div class="card">
+        <div class="card-body">
+            <p class="text-default-500 text-sm mb-1">Workout Logs</p>
+            <h4 class="text-xl font-semibold text-default-900">@ViewBag.TotalWorkouts</h4>
+        </div>
+    </div>
+    <div class="card">
+        <div class="card-body">
+            <p class="text-default-500 text-sm mb-1">Meal Logs</p>
+            <h4 class="text-xl font-semibold text-default-900">@ViewBag.TotalMeals</h4>
+        </div>
+    </div>
+    <div class="card">
+        <div class="card-body">
+            <p class="text-default-500 text-sm mb-1">Average Logs / Client</p>
+            <h4 class="text-xl font-semibold text-default-900">@ViewBag.AveragePerClient</h4>
+        </div>
+    </div>
+</div>
+
+<div class="grid lg:grid-cols-2 gap-6 mb-6">
+    <div class="card">
+        <div class="card-header"><h4 class="card-title">Workout Activity Over Time</h4></div>
+        <div class="card-body"><div id="trend-chart"></div></div>
+    </div>
+    <div class="card">
+        <div class="card-header"><h4 class="card-title">Appointments by Status</h4></div>
+        <div class="card-body"><div id="appt-chart"></div></div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header"><h4 class="card-title">Client Engagement</h4></div>
+    <div class="overflow-x-auto">
+        <table class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-gray-50">
+                <tr>
+                    <th class="px-6 py-3 text-start text-sm text-default-500">Client</th>
+                    <th class="px-6 py-3 text-start text-sm text-default-500">Workouts</th>
+                    <th class="px-6 py-3 text-start text-sm text-default-500">Meals</th>
+                    <th class="px-6 py-3 text-start text-sm text-default-500">Last activity</th>
+                    <th class="px-6 py-3 text-start text-sm text-default-500">Days since</th>
+                    <th class="px-6 py-3 text-start text-sm text-default-500">Status</th>
+                </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-200">
+                @if (rows.Count == 0)
+                {
+                    <tr><td colspan="6" class="px-6 py-4 text-sm text-default-500">No clients available.</td></tr>
+                }
+                else
+                {
+                    foreach (var r in rows)
+                    {
+                        <tr>
+                            <td class="px-6 py-3 text-sm text-default-800">@r.FullName</td>
+                            <td class="px-6 py-3 text-sm">@r.Workouts</td>
+                            <td class="px-6 py-3 text-sm">@r.Meals</td>
+                            <td class="px-6 py-3 text-sm">@(r.LastActivity.HasValue ? r.LastActivity.Value.ToLocalTime().ToString("dd MMM yyyy") : "-")</td>
+                            <td class="px-6 py-3 text-sm">@(r.DaysSince.HasValue ? r.DaysSince.Value.ToString() : "-")</td>
+                            <td class="px-6 py-3 text-sm">
+                                <span class="inline-block px-2 py-1 rounded-md text-xs text-white @(r.Status == "Active" ? "bg-success" : (r.Status == "At risk" ? "bg-warning" : "bg-gray-500"))">@r.Status</span>
+                            </td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+@section scripts {
+    <script>
+        (function () {
+            new ApexCharts(document.querySelector("#trend-chart"), {
+                chart: { type: "area", height: 300, toolbar: { show: false } },
+                series: [{ name: "Workout logs", data: "@ViewBag.TrendSeries".split(",").map(Number) }],
+                xaxis: { categories: "@ViewBag.TrendLabels".split(",") },
+                colors: ["#22c55e"],
+                stroke: { curve: "smooth", width: 2 },
+                dataLabels: { enabled: false },
+                grid: { strokeDashArray: 4 }
+            }).render();
+
+            new ApexCharts(document.querySelector("#appt-chart"), {
+                chart: { type: "bar", height: 300, toolbar: { show: false } },
+                series: [{ name: "Appointments", data: "@ViewBag.ApptSeries".split(",").map(Number) }],
+                xaxis: { categories: "@ViewBag.ApptLabels".split(",") },
+                colors: ["#0ea5e9"],
+                plotOptions: { bar: { borderRadius: 4, columnWidth: "45%" } },
+                dataLabels: { enabled: false },
+                grid: { strokeDashArray: 4 }
+            }).render();
+        })();
+    </script>
+}

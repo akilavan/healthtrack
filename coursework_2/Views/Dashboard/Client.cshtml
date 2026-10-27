@@ -1,0 +1,182 @@
+@using System.Collections.Generic
+@using coursework_2.Models
+@{
+    var plan = ViewBag.ActivePlan as WorkoutPlan;
+    var diet = ViewBag.ActiveDiet as DietPlan;
+    var appt = ViewBag.NextAppointment as Appointment;
+    var metric = ViewBag.LatestMetric as HealthMetric;
+    var logs = ViewBag.RecentLogs as List<WorkoutLog>;
+    decimal calIn = ViewBag.CaloriesIn;
+    decimal calOut = ViewBag.CaloriesOut;
+}
+
+@if (ViewBag.HasActiveTrainer != true)
+{
+    <div class="mb-6 rounded-md bg-warning/10 border border-warning px-4 py-3 text-sm text-default-900">
+        You do not have an assigned trainer yet.
+        <a class="font-medium text-primary" href="@Url.Action("RequestTrainer", "TrainerRequests")">Request a trainer from the administrator</a>.
+    </div>
+}
+
+<div class="grid lg:grid-cols-4 md:grid-cols-2 gap-6 mb-6">
+    <div class="card">
+        <div class="card-body">
+            <div class="flex justify-between items-center">
+                <div>
+                    <p class="text-default-500 text-sm mb-1">Active Workout Plan</p>
+                    <h4 class="text-xl font-semibold text-default-900">@(plan != null ? plan.Title : "None yet")</h4>
+                    <p class="text-default-500 text-sm mt-1">@(plan != null ? plan.Items.Count + " exercises" : "Ask your trainer")</p>
+                </div>
+                <div class="rounded-lg flex justify-center items-center size-16 bg-primary/10 text-primary">
+                    <span class="material-symbols-rounded text-4xl">fitness_center</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+            <div class="flex justify-between items-center">
+                <div>
+                    <p class="text-default-500 text-sm mb-1">Calories In Today</p>
+                    <h4 class="text-xl font-semibold text-default-900">@calIn.ToString("0")</h4>
+                    <p class="text-default-500 text-sm mt-1">Target @(diet != null ? diet.DailyCalorieTarget.ToString() : "-") kcal</p>
+                </div>
+                <div class="rounded-lg flex justify-center items-center size-16 bg-success/10 text-success">
+                    <span class="material-symbols-rounded text-4xl">restaurant</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+            <div class="flex justify-between items-center">
+                <div>
+                    <p class="text-default-500 text-sm mb-1">Calories Burned Today</p>
+                    <h4 class="text-xl font-semibold text-default-900">@calOut.ToString("0")</h4>
+                    <p class="text-default-500 text-sm mt-1">Keep moving</p>
+                </div>
+                <div class="rounded-lg flex justify-center items-center size-16 bg-info/10 text-info">
+                    <span class="material-symbols-rounded text-4xl">local_fire_department</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+            <div class="flex justify-between items-center">
+                <div>
+                    <p class="text-default-500 text-sm mb-1">Current Weight</p>
+                    <h4 class="text-xl font-semibold text-default-900">@(metric != null ? metric.WeightKg.ToString("0.0") + " kg" : "Not recorded")</h4>
+                    <p class="text-default-500 text-sm mt-1">
+                        @if (metric != null && metric.BMI.HasValue)
+                        {
+                            <span>BMI @metric.BMI.Value.ToString("0.0")</span>
+                        }
+                        else
+                        {
+                            <a class="text-primary" href="@Url.Action("Index", "Progress")">Log your weight</a>
+                        }
+                    </p>
+                </div>
+                <div class="rounded-lg flex justify-center items-center size-16 bg-danger text-white">
+                    <span class="material-symbols-rounded text-4xl">monitor_weight</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="grid xl:grid-cols-3 gap-6 mb-6">
+    <div class="xl:col-span-2">
+        <div class="card h-full">
+            <div class="card-header">
+                <h4 class="card-title">Calories Burned - Last 7 Days</h4>
+            </div>
+            <div class="card-body">
+                <div id="burned-chart"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <h4 class="card-title">Next Appointment</h4>
+        </div>
+        <div class="card-body">
+            @if (appt == null)
+            {
+                <p class="text-default-500 text-sm">No upcoming appointments.</p>
+                <a href="@Url.Action("Index", "Appointments")" class="btn btn-sm bg-primary text-white mt-4">Book one</a>
+            }
+            else
+            {
+                <p class="text-default-500 text-sm mb-1">@appt.StartTime.ToString("dddd, dd MMM yyyy")</p>
+                <h4 class="text-lg font-semibold text-default-900 mb-1">@appt.StartTime.ToString("h:mm tt")</h4>
+                <p class="text-default-700 text-sm mb-1">With @(appt.Trainer != null ? appt.Trainer.FullName : "your trainer")</p>
+                <p class="text-default-500 text-sm">@appt.Purpose</p>
+                <span class="inline-block mt-3 px-2 py-1 rounded-md text-xs bg-warning text-white">@appt.Status</span>
+            }
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header flex justify-between items-center">
+        <h4 class="card-title">Recent Workouts</h4>
+        <a href="@Url.Action("Index", "Workouts")" class="btn btn-sm bg-light text-gray-800">View all</a>
+    </div>
+    <div class="overflow-x-auto">
+        <table class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-gray-50">
+                <tr>
+                    <th class="px-6 py-3 text-start text-sm text-default-500">Date</th>
+                    <th class="px-6 py-3 text-start text-sm text-default-500">Exercise</th>
+                    <th class="px-6 py-3 text-start text-sm text-default-500">Sets</th>
+                    <th class="px-6 py-3 text-start text-sm text-default-500">Duration</th>
+                    <th class="px-6 py-3 text-start text-sm text-default-500">Calories</th>
+                </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-200">
+                @if (logs == null || logs.Count == 0)
+                {
+                    <tr><td colspan="5" class="px-6 py-4 text-sm text-default-500">No workouts logged yet.</td></tr>
+                }
+                else
+                {
+                    foreach (var l in logs)
+                    {
+                        <tr>
+                            <td class="px-6 py-3 text-sm">@l.LogDate.ToString("dd MMM")</td>
+                            <td class="px-6 py-3 text-sm text-default-800">@(l.Exercise != null ? l.Exercise.Name : "-")</td>
+                            <td class="px-6 py-3 text-sm">@(l.Sets.HasValue ? l.Sets.ToString() : "-")</td>
+                            <td class="px-6 py-3 text-sm">@(l.DurationMin.HasValue ? l.DurationMin + " min" : "-")</td>
+                            <td class="px-6 py-3 text-sm">@(l.CaloriesBurned.HasValue ? l.CaloriesBurned.Value.ToString("0.0") : "-")</td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+@section scripts {
+    <script>
+        (function () {
+            var labels = "@ViewBag.ChartLabels".split(",");
+            var data = "@ViewBag.ChartSeries".split(",").map(Number);
+
+            new ApexCharts(document.querySelector("#burned-chart"), {
+                chart: { type: "bar", height: 300, toolbar: { show: false } },
+                series: [{ name: "Calories burned", data: data }],
+                xaxis: { categories: labels },
+                colors: ["#8b5cf6"],
+                plotOptions: { bar: { borderRadius: 4, columnWidth: "45%" } },
+                dataLabels: { enabled: false },
+                grid: { strokeDashArray: 4 }
+            }).render();
+        })();
+    </script>
+}

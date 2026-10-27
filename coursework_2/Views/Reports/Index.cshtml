@@ -1,0 +1,139 @@
+﻿@using System.Collections.Generic
+@using coursework_2.Models
+
+@{
+    var topExercises = ViewBag.TopExercises as List<NamedCount> ?? new List<NamedCount>();
+    var topTrainers = ViewBag.TopTrainers as List<NamedCount> ?? new List<NamedCount>();
+}
+@Html.Partial("_ReportNav")
+
+<div class="grid lg:grid-cols-4 md:grid-cols-2 gap-6 mb-6">
+    <div class="card">
+        <div class="card-body">
+            <p class="text-default-500 text-sm mb-1">Total Users</p>
+            <h4 class="text-xl font-semibold text-default-900">@ViewBag.TotalUsers</h4>
+            <p class="text-default-500 text-sm mt-1">@ViewBag.ActiveUsers active - @ViewBag.NewThisMonth new this month</p>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+            <p class="text-default-500 text-sm mb-1">Clients / Trainers</p>
+            <h4 class="text-xl font-semibold text-default-900">@ViewBag.Clients / @ViewBag.Trainers</h4>
+            <p class="text-default-500 text-sm mt-1">@ViewBag.PendingAppointments pending appointments</p>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+            <p class="text-default-500 text-sm mb-1">Calories Burned (30 days)</p>
+            <h4 class="text-xl font-semibold text-default-900">@(((decimal)ViewBag.CaloriesOut30).ToString("0"))</h4>
+            <p class="text-default-500 text-sm mt-1">@ViewBag.WorkoutLogs30 workouts logged</p>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+            <p class="text-default-500 text-sm mb-1">Calories Consumed (30 days)</p>
+            <h4 class="text-xl font-semibold text-default-900">@(((decimal)ViewBag.CaloriesIn30).ToString("0"))</h4>
+            <p class="text-default-500 text-sm mt-1">@ViewBag.MealLogs30 meals logged</p>
+        </div>
+    </div>
+</div>
+
+<div class="grid lg:grid-cols-2 gap-6 mb-6">
+    <div class="card">
+        <div class="card-header"><h4 class="card-title">Users by Role</h4></div>
+        <div class="card-body"><div id="role-chart"></div></div>
+    </div>
+    <div class="card">
+        <div class="card-header"><h4 class="card-title">Appointments by Status</h4></div>
+        <div class="card-body"><div id="appt-chart"></div></div>
+    </div>
+</div>
+
+<div class="grid lg:grid-cols-2 gap-6">
+    <div class="card">
+        <div class="card-header"><h4 class="card-title">Top Exercises</h4></div>
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-6 py-3 text-start text-sm text-default-500">Exercise</th>
+                        <th class="px-6 py-3 text-start text-sm text-default-500">Times logged</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    @if (topExercises.Count == 0)
+                    {
+                        <tr><td colspan="2" class="px-6 py-4 text-sm text-default-500">No workout logs yet.</td></tr>
+                    }
+                    else
+                    {
+                        foreach (var t in topExercises)
+                        {
+                            <tr>
+                                <td class="px-6 py-3 text-sm">@t.Name</td>
+                                <td class="px-6 py-3 text-sm">@t.Count</td>
+                            </tr>
+                        }
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header"><h4 class="card-title">Busiest Trainers</h4></div>
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-6 py-3 text-start text-sm text-default-500">Trainer</th>
+                        <th class="px-6 py-3 text-start text-sm text-default-500">Active clients</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    @if (topTrainers.Count == 0)
+                    {
+                        <tr><td colspan="2" class="px-6 py-4 text-sm text-default-500">No assignments yet.</td></tr>
+                    }
+                    else
+                    {
+                        foreach (var t in topTrainers)
+                        {
+                            <tr>
+                                <td class="px-6 py-3 text-sm">@t.Name</td>
+                                <td class="px-6 py-3 text-sm">@t.Count</td>
+                            </tr>
+                        }
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+@section scripts {
+    <script>
+        (function () {
+            new ApexCharts(document.querySelector("#role-chart"), {
+                chart: { type: "donut", height: 300, toolbar: { show: false } },
+                series: "@ViewBag.RoleSeries".split(",").map(Number),
+                labels: "@ViewBag.RoleLabels".split(","),
+                colors: ["#8b5cf6", "#22c55e", "#0ea5e9"],
+                dataLabels: { enabled: false }
+            }).render();
+
+            new ApexCharts(document.querySelector("#appt-chart"), {
+                chart: { type: "bar", height: 300, toolbar: { show: false } },
+                series: [{ name: "Appointments", data: "@ViewBag.ApptSeries".split(",").map(Number) }],
+                xaxis: { categories: "@ViewBag.ApptLabels".split(",") },
+                colors: ["#0ea5e9"],
+                plotOptions: { bar: { borderRadius: 4, columnWidth: "45%" } },
+                dataLabels: { enabled: false },
+                grid: { strokeDashArray: 4 }
+            }).render();
+        })();
+    </script>
+}

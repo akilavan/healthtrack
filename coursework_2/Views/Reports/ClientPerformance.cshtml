@@ -1,0 +1,122 @@
+﻿@using System.Collections.Generic
+@using coursework_2.Models
+@model List<ClientPerformanceRow>
+@{
+    var clients = ViewBag.ClientList as SelectList;
+    var chartType = ViewBag.ChartClient != null ? "line" : "bar";
+    var chartTitle = ViewBag.ChartClient != null ? "Weight trend - " + ViewBag.ChartClient : "Workouts by client";
+}
+
+@Html.Partial("_ReportNav")
+
+<form method="get" action="@Url.Action("ClientPerformance", "Reports")" class="flex flex-wrap gap-2 mb-6">
+    <input type="date" name="from" value="@ViewBag.FromIso" class="form-input w-full md:w-44" />
+    <input type="date" name="to" value="@ViewBag.ToIso" class="form-input w-full md:w-44" />
+    <select name="clientId" class="form-input w-full md:w-64">
+        <option value="">All clients</option>
+        @if (clients != null)
+        {
+            foreach (var item in clients)
+            {
+                <option value="@item.Value" selected="@(ViewBag.ClientId != null && ViewBag.ClientId.ToString() == item.Value ? "selected" : null)">@item.Text</option>
+            }
+        }
+    </select>
+    <button type="submit" class="btn bg-primary text-white">Generate</button>
+    <a class="btn bg-light text-gray-800" href="@Url.Action("ClientPerformanceCsv", "Reports", new { clientId = ViewBag.ClientId, from = ViewBag.FromIso, to = ViewBag.ToIso })">Export CSV</a>
+</form>
+
+<div class="grid lg:grid-cols-4 md:grid-cols-2 gap-6 mb-6">
+    <div class="card">
+        <div class="card-body">
+            <p class="text-default-500 text-sm mb-1">Workouts</p>
+            <h4 class="text-xl font-semibold text-default-900">@ViewBag.TotalWorkouts</h4>
+        </div>
+    </div>
+    <div class="card">
+        <div class="card-body">
+            <p class="text-default-500 text-sm mb-1">Training Minutes</p>
+            <h4 class="text-xl font-semibold text-default-900">@ViewBag.TotalMinutes</h4>
+        </div>
+    </div>
+    <div class="card">
+        <div class="card-body">
+            <p class="text-default-500 text-sm mb-1">Calories Burned</p>
+            <h4 class="text-xl font-semibold text-default-900">@(((decimal)ViewBag.TotalCalories).ToString("0"))</h4>
+        </div>
+    </div>
+    <div class="card">
+        <div class="card-body">
+            <p class="text-default-500 text-sm mb-1">Active Clients</p>
+            <h4 class="text-xl font-semibold text-default-900">@ViewBag.ActiveClients</h4>
+        </div>
+    </div>
+</div>
+
+<div class="card mb-6">
+    <div class="card-header"><h4 class="card-title">@chartTitle</h4></div>
+    <div class="card-body"><div id="perf-chart"></div></div>
+</div>
+
+<div class="card">
+    <div class="card-header"><h4 class="card-title">Client Performance</h4></div>
+    <div class="overflow-x-auto">
+        <table class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-gray-50">
+                <tr>
+                    <th class="px-6 py-3 text-start text-sm text-default-500">Client</th>
+                    <th class="px-6 py-3 text-start text-sm text-default-500">Workouts</th>
+                    <th class="px-6 py-3 text-start text-sm text-default-500">Minutes</th>
+                    <th class="px-6 py-3 text-start text-sm text-default-500">Calories</th>
+                    <th class="px-6 py-3 text-start text-sm text-default-500">Meals</th>
+                    <th class="px-6 py-3 text-start text-sm text-default-500">Weight change</th>
+                    <th class="px-6 py-3 text-start text-sm text-default-500">BMI</th>
+                    <th class="px-6 py-3 text-start text-sm text-default-500">Appointments</th>
+                    <th class="px-6 py-3 text-start text-sm text-default-500">Last activity</th>
+                </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-200">
+                @if (Model == null || Model.Count == 0)
+                {
+                    <tr><td colspan="9" class="px-6 py-4 text-sm text-default-500">No clients match this filter.</td></tr>
+                }
+                else
+                {
+                    foreach (var r in Model)
+                    {
+                        <tr>
+                            <td class="px-6 py-3 text-sm text-default-800">@r.FullName</td>
+                            <td class="px-6 py-3 text-sm">@r.Workouts</td>
+                            <td class="px-6 py-3 text-sm">@r.Minutes</td>
+                            <td class="px-6 py-3 text-sm">@r.CaloriesOut.ToString("0")</td>
+                            <td class="px-6 py-3 text-sm">@r.Meals</td>
+                            <td class="px-6 py-3 text-sm">
+                                @(r.WeightChange.HasValue ? r.WeightChange.Value.ToString("+0.0;-0.0;0") + " kg" : "-")
+                            </td>
+                            <td class="px-6 py-3 text-sm">@(r.LatestBmi.HasValue ? r.LatestBmi.Value.ToString("0.0") : "-")</td>
+                            <td class="px-6 py-3 text-sm">@r.AppointmentsCompleted / @r.AppointmentsTotal</td>
+                            <td class="px-6 py-3 text-sm">@(r.LastActivity.HasValue ? r.LastActivity.Value.ToLocalTime().ToString("dd MMM yyyy") : "-")</td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+@section scripts {
+    <script>
+        (function () {
+            new ApexCharts(document.querySelector("#perf-chart"), {
+                chart: { type: "@chartType", height: 320, toolbar: { show: false } },
+                series: [{ name: "@(ViewBag.ChartClient != null ? "Weight (kg)" : "Workouts")", data: "@ViewBag.ChartSeries".split(",").map(Number) }],
+                xaxis: { categories: "@ViewBag.ChartLabels".split(",") },
+                colors: ["#0ea5e9"],
+                stroke: { curve: "smooth", width: 2 },
+                plotOptions: { bar: { borderRadius: 4, columnWidth: "45%" } },
+                dataLabels: { enabled: false },
+                grid: { strokeDashArray: 4 }
+            }).render();
+        })();
+    </script>
+}
